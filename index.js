@@ -12,6 +12,7 @@ var client = new elasticsearch.Client({
 // Check trends in ticket tags
 // Detect more requests than usual
 
+
 function rand (min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
 }
@@ -61,10 +62,13 @@ client.ping({
 	else console.log("Database is up on localhost:9200");
 
 
-	client.bulk({
-		body: generateData(10000)
-	}, function (err, resp) {
-		console.log("Bulk insert: ", resp.took);
-	});
+	setInterval(function () {
+		var insertNum = rand(500, 1500);
+		client.bulk({
+			body: generateData(insertNum)
+		}, function (err, resp) {
+			console.log(resp.took + "ms -- " + insertNum);
+		});
+	}, 2000);
 
 });

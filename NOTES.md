@@ -1,7 +1,14 @@
 ## RALLYDEV
 Seems like the watcher could be very useful to trigger events.
 Visualization wouldn't really help as there is not enough data.
-Ticketing system?
+
+How do you use rally?
+* What happens when a new version is released (do you create a new board, branch out etc)?
+* How do you handle an issue (ticket?)?
+* What if you come up with a new feature (eg. where does it go if it's under consideration or under development?)?
+* Do you keep team member performance metrics (eg. hours worked)?
+* What columns do you have on each board?
+* How many boards do you have and what are they for?
 
 
 ## SUPPORT SYSTEM

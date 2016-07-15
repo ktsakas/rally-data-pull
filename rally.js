@@ -1,17 +1,12 @@
 const _ = require('underscore'),
-	  config = require('./config.js');
+	  config = require('./config'),
+	  l = config.logger;
 
-var winston = require('winston'),
-	l = new (winston.Logger)({ level: 'silly' }),
-	elasticsearch = require('elasticsearch'),
+var elasticsearch = require('elasticsearch'),
 	client = new elasticsearch.Client(config.elastic),
 	rally = require('rally');
 
-l.level = 'silly';
-
-console.log(config.rally.user, config.rally.pass, config.rally.server);
-
-/*var queryUtils = rally.util.query,
+var queryUtils = rally.util.query,
 	restApi = rally({
 		user: config.rally.user,
 		pass: config.rally.pass,
@@ -45,21 +40,31 @@ function toElastic (artifacts) {
 	return batch;
 }
 
-// for (var i = 0; i < 10; i++) {
+function pullAll(start) {
+	start = start || 1;
+
 	restApi.query({
-		type: 'artifact', //the type to query
-		start: 1, //the 1-based start index, defaults to 1
-		pageSize: 200, //the page size (1-200, defaults to 200)
+		type: 'artifact',
+		start: start,
+		pageSize: 200,
 		fetch: "true"
 	}, function(error, result) {
-		console.log(result.Results[0].length);
-		client.bulk({
+		var count = result.Results.length;
+		console.log(count);
+
+		if (count == 200) {
+			pullAll(start + 200);
+		}
+
+		/*client.bulk({
 			body: toElastic(result.Results)
 		}, function (err, resp) {
 			console.log("error: ", err);
 			console.log("resp: ", resp.items[0]);
 			if (err) console.log(err);
 			else console.log(resp.took);
-		});
-	});*/
-// }
+		});*/
+	});
+}
+
+pullAll();

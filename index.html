@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Importing</title>
+    </head>
+    <body>
+        
+        <script type="text/javascript" src="https://rally1.rallydev.com/apps/2.1/sdk-debug.js"></script>
+        <script>
+		Rally.onReady(function() {
+
+			Ext.define('CustomApp', {
+				extend: 'Rally.app.App',
+				componentCls: 'app',
+
+				launch: function() {
+					console.log("rally app");
+				}
+			});
+
+			Rally.launchApp('CustomApp', {
+				name: 'My Custom App'
+			});
+
+		});
+        </script>
+    </body>
+</html>

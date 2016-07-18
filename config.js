@@ -15,8 +15,13 @@ module.exports = {
 		server: "https://rally1.rallydev.com",
 	},
 
+	kibana: {
+		host: "http://83684862.ngrok.io"
+	},
+
 	elastic: {
-		host: "localhost:9200",
+		host: "http://faf61a25.ngrok.io",
+		// host: "localhost:9200",
 		log: "error",
 	}
 };

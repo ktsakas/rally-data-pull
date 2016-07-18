@@ -26,7 +26,7 @@ function toElastic (artifacts) {
 	var batch = [];
 	var first = true;
 	artifacts.forEach(function (artifact) {
-		batch.push({ index: { "_index": "rally", "_type": "artifact" } });
+		batch.push({ index: { "_index": "rally", "_type": "TestBed" } });
 
 		artifact["type"] = artifact["_type"];
 		delete artifact["_type"];
@@ -56,15 +56,24 @@ function pullAll(start) {
 			pullAll(start + 200);
 		}
 
-		/*client.bulk({
+		client.bulk({
 			body: toElastic(result.Results)
 		}, function (err, resp) {
 			console.log("error: ", err);
 			console.log("resp: ", resp.items[0]);
 			if (err) console.log(err);
 			else console.log(resp.took);
-		});*/
+		});
 	});
 }
 
-pullAll();
+client.ping({
+	requestTimeout: Infinity
+}, function (error) {
+	if (error) {
+		console.log("Unable to connect to elastic at: " + config.elastic.host);
+	} else {
+		console.log("Connected to elastic at: " + config.elastic.host);
+		pullAll();
+	}
+});

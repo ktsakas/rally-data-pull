@@ -1,4 +1,6 @@
 var express = require("express"),
+	app = express(),
+	bodyParser = require('body-parser'),
 	config = require('./config'),
 	l = config.logger;
 
@@ -13,16 +15,27 @@ app.get('/webhook', function (req, res) {
 	esClient.index({
 		index: "webhooks",
 		type: "TestBed",
-		body: req
+		body: {
+			headers: req.headers,
+			params: req.query
+		}
+	}).then(function (res) {
+		if (res.created == true) {
+			l.info("webhook request successfull");
+		} else {
+			l.error("failed to insert webhook into elastic.")
+		}
 	});
+
+	res.json({ headers: req.headers, params: req.query });
 });
 
 esClient.ping({
-	requestTimeout: Infinity
+	requestTimeout: 1000
 }, function (error) {
 	if (error) {
 		console.log("Unable to connect to elastic at: " + config.elastic.host);
 	} else {
-		app.listen(config.port, () => l.info("Chatbot listening on 127.0.0.1:" + port));
+		app.listen(config.port, () => l.info("Chatbot listening on 127.0.0.1:" + config.port));
 	}
 });

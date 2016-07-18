@@ -10,6 +10,8 @@ var elasticsearch = require('elasticsearch'),
 app.use(bodyParser.json())
    .use(bodyParser.urlencoded({ extended: false }));
 
+app.get('/', (req, res) => res.json({ pong: true }));
+
 // Store webhook requests in elastic
 app.get('/webhook', function (req, res) {
 	esClient.index({

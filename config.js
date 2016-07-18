@@ -8,6 +8,7 @@ var winston = require('winston'),
 
 module.exports = {
 	logger: logger,
+	port: process.env.PORT || 3000,
 
 	rally: {
 		user: process.env.USER,

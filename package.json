@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "dotenv": "^2.0.0",
+    "express": "^4.14.0",
     "faker": "^3.1.0",
     "rally": "^0.2.0",
     "underscore": "^1.8.3"

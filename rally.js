@@ -3,7 +3,7 @@ const _ = require('underscore'),
 	  l = config.logger;
 
 var elasticsearch = require('elasticsearch'),
-	client = new elasticsearch.Client(config.elastic),
+	esClient = new elasticsearch.Client(config.elastic),
 	rally = require('rally');
 
 var queryUtils = rally.util.query,
@@ -56,7 +56,7 @@ function pullAll(start) {
 			pullAll(start + 200);
 		}
 
-		client.bulk({
+		esClient.bulk({
 			body: toElastic(result.Results)
 		}, function (err, resp) {
 			console.log("error: ", err);
@@ -67,7 +67,7 @@ function pullAll(start) {
 	});
 }
 
-client.ping({
+esClient.ping({
 	requestTimeout: Infinity
 }, function (error) {
 	if (error) {

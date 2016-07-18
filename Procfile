@@ -1,1 +1,1 @@
-web: node server.js
+web: node rally-webhook.js

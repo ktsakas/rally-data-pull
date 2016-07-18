@@ -45,6 +45,9 @@ function pullAll(start) {
 
 	restApi.query({
 		type: 'artifact',
+		scope: {
+			workspace: "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/5339961604",
+		},
 		start: start,
 		pageSize: 200,
 		fetch: "true"

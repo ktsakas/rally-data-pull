@@ -1,3 +1,15 @@
+
+## UNDOCUMENTED
+* The limit for production link seems to be 2000 and sandbox is 200.
+* If you get all artifacts it will default to a workspace so, to get all artifacts from another workspace you need to add a parameter.
+* There is no user story type in artifacts.
+* Webhooks are not in the sdk (just an api)
+* The SDK is client only (and does not work with the sandbox)
+* Operators that don't need a value only work with Attribute ID (not attribute name)
+* Workspace belongs to subscription
+* there is a revision history so we can pull in past data (might be easier to just check the revision history)
+
+
 ## RALLYDEV
 Seems like the watcher could be very useful to trigger events.
 Visualization wouldn't really help as there is not enough data.

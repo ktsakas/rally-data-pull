@@ -13,18 +13,14 @@ app.use(bodyParser.json())
 
 app.get('/', (req, res) => res.json({ elastic: config.elastic.host, kibana: config.kibana.host }));
 
-// Store webhook requests in elastic
-app.get('/webhook', function (req, res) {
-	res.send("Webhooks use post requests. There is nothing here.");
-});
-
 app.post('/webhook', function (req, res) {
 	esClient.index({
 		index: "webhooks",
 		type: "TestBed",
 		body: {
 			headers: req.headers,
-			params: req.query
+			params: req.query,
+			body: req.body
 		}
 	}).then(function (res) {
 		if (res.created == true) {
@@ -33,9 +29,14 @@ app.post('/webhook', function (req, res) {
 			l.error("failed to insert webhook into elastic.")
 		}
 	});
-
-	console.log(req);
+	
 	res.json({ headers: req.headers, query: req.query, body: req.body });
+});
+
+app.use(function(req, res){
+	l.warn("Called false route.")
+
+	res.send("Only supports post requests to /webhook.");
 });
 
 esClient.ping({

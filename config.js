@@ -1,4 +1,7 @@
-const dotenv = require('dotenv').config({ path: ".env" });
+if (!process.env.PROD) {
+	const dotenv = require('dotenv').config({ path: ".env" });
+}
+
 var winston = require('winston'),
 	logger = new (winston.Logger)({
 		transports: [

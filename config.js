@@ -2,7 +2,8 @@ if (!process.env.PROD) {
 	const dotenv = require('dotenv').config({ path: ".env" });
 }
 
-var winston = require('winston'),
+var elastic = require('elasticsearch'),
+	winston = require('winston'),
 	logger = new (winston.Logger)({
 		transports: [
 			new (winston.transports.Console)({ level : 'silly' })
@@ -27,5 +28,11 @@ module.exports = {
 		host: "http://faf61a25.ngrok.io",
 		// host: "localhost:9200",
 		log: "error",
-	}
+	},
+
+	esClient: new elastic.Client({
+		host: "http://faf61a25.ngrok.io",
+		// host: "localhost:9200",
+		log: "error",
+	})
 };

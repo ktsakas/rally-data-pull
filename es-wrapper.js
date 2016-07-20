@@ -1,31 +1,15 @@
-var config = require('./config'),
-	ES = require('elasticsearch');
+var config = require('./config');
 
 /**
  * @class ESWrapper
  * @extends ES
  */
-class ESwrapper extends ES {
-	constructor(index, type) {
-		super(config.elastic);
+class ESObject {
+	constructor(esClient, index, type) {
+		this.esClient = esClient;
 
 		this.index = index;
 		this.type = type;
-	}
-
-	/**
-	 * Check whether elastic search is running.
-	 * 
-	 * @return {promise}
-	 */
-	isRunning () {
-		return esClient.ping()
-			.catch(function (err) {
-				l.error("Unable to connect to elastic at " + config.elastic.host);
-			})
-			.then(function () {
-				l.info("Connected to elastic at: " + config.elastic.host);
-			});
 	}
 
 	/**
@@ -34,10 +18,12 @@ class ESwrapper extends ES {
 	 * @param  {array} Array of objects.
 	 * @return {array} Bulk query compliant array.
 	 */
-	static arrayToBulk(array) {
-		var batch = [];
-		artifacts.forEach(function (array) {
-			batch.push({ index: { "_index": this.index, "_type": this.type } });
+	arrayToBulk(array) {
+		var self = this,
+			batch = [];
+		
+		array.forEach(function (array) {
+			batch.push({ index: { "_index": self.index, "_type": self.type } });
 			batch.push(array);
 		});
 
@@ -50,9 +36,9 @@ class ESwrapper extends ES {
 	 * @param  {array} Array of objects.
 	 * @return {promise}
 	 */
-	batchIndex(array) {
-		return esClient.bulk({ body: this.arrayToBulk(array) });
+	bulkIndex(array) {
+		return this.esClient.bulk({ body: this.arrayToBulk(array) });
 	}
 }
 
-module.export = ESwrapper;
+module.exports = ESObject;

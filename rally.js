@@ -1,31 +1,16 @@
 const _ = require('underscore'),
 	  config = require('./config'),
-	  l = config.logger;
+	  l = config.logger,
+	  esClient = config.esClient;
 
-var elasticsearch = require('elasticsearch'),
-	esClient = new elasticsearch.Client(config.elastic),
-	rally = require('rally');
-
-var artifactTranslator = require('./artifact-translator.js'),
-	esWrapper = require('./es-wrapper.js');
-
-var queryUtils = rally.util.query,
-	restApi = rally({
-		user: config.rally.user,
-		pass: config.rally.pass,
-		apiVersion: 'v2.0',
-		server: config.rally.server,
-		requestOptions: {
-			headers: {
-				'X-RallyIntegrationName': 'User Story Kibana Analysis',
-				'X-RallyIntegrationVendor': 'TravelClick',
-				'X-RallyIntegrationVersion': '1.0'
-			}
-		}
-	});
+/*var elasticsearch = require('elasticsearch'),
+	esClient = new elasticsearch.Client(config.elastic);
+*/
+var artifactTranslator = require('./artifact-mapper'),
+	rallyUtils = require('./rally-utils');
 
 
-function toElastic (artifacts) {
+/*function toElastic (artifacts) {
 	var batch = [];
 	var first = true;
 	artifacts.forEach(function (artifact) {
@@ -74,15 +59,14 @@ function pullAll(start) {
 			else console.log(resp.took);
 		});
 	});
-}
+}*/
 
-esClient.ping({
-	requestTimeout: Infinity
-}, function (error) {
-	if (error) {
-		console.log("Unable to connect to elastic at: " + config.elastic.host);
-	} else {
-		console.log("Connected to elastic at: " + config.elastic.host);
-		pullAll();
-	}
-});
+
+esClient
+	.ping()
+	.catch((err) => l.error("Unable to connect to elastic at " + config.elastic.host))
+	.then(() => l.info("Connected to elastic at: " + config.elastic.host))
+	.then(() => {
+		l.info("Indexing Rally data...");
+		rallyUtils.pullAll()
+	});

@@ -19,17 +19,17 @@ function normalizeValues(object) {
 			delete object[key];
 		}
 
-		if (object[key] != null && typeof object[key] == "object") {
+		if (typeof object[key] == "object" && object[key] != null) {
 			object["obj_" + key] = JSON.stringify(object[key]);
 			delete object[key];
 		}
 
-		if ( new Date(object[key]) != "Invalid Date" ) {
+		if (typeof object[key] == "string" && new Date(object[key]) != "Invalid Date" ) {
 			object["date_" + key] = object[key];
 			delete object[key];
 		}
 
-		if ( typeof object[key] == "boolean" ) {
+		if (typeof object[key] == "boolean") {
 			object["bool_" + key] = object[key];
 			delete object[key];
 		}

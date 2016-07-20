@@ -1,0 +1,5 @@
+class RallyController {
+	static create () {
+
+	}
+}

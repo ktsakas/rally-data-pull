@@ -6,6 +6,9 @@ var elasticsearch = require('elasticsearch'),
 	esClient = new elasticsearch.Client(config.elastic),
 	rally = require('rally');
 
+var artifactTranslator = require('./artifact-translator.js'),
+	esWrapper = require('./es-wrapper.js');
+
 var queryUtils = rally.util.query,
 	restApi = rally({
 		user: config.rally.user,
@@ -49,9 +52,12 @@ function pullAll(start) {
 			workspace: "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/5339961604",
 		},
 		start: start,
-		pageSize: 200,
+		pageSize: 1,
 		fetch: "true"
 	}, function(error, result) {
+		// console.log("raw: ", result.Results[0]);
+		var mappedArtifacts = result.Results.map(artifactTranslator.translate.bind(artifactTranslator));
+
 		var count = result.Results.length;
 		console.log(count);
 
@@ -60,7 +66,7 @@ function pullAll(start) {
 		}
 
 		esClient.bulk({
-			body: toElastic(result.Results)
+			body: toElastic(mappedArtifacts)
 		}, function (err, resp) {
 			console.log("error: ", err);
 			console.log("resp: ", resp.items[0]);

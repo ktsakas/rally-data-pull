@@ -8,6 +8,10 @@
 * Operators that don't need a value only work with Attribute ID (not attribute name)
 * Workspace belongs to subscription
 * there is a revision history so we can pull in past data (might be easier to just check the revision history)
+* Seems like the same attribute can have a different ID for different artifacts (but is rally wide)
+* Read-only key will show read only values (even if you do not edit them), so use full access
+* To log out of postman basic auth you gotta send false token and not choose basic auth
+* The webservice documentation updates to match the selected workspace
 
 
 ## RALLYDEV

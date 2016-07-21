@@ -12,4 +12,6 @@ How do you pull data from 3rd party providers (is it custom per provider), do yo
 How do you manage packages in the frontend?
 Do you use linters (do you use "use strict")?
 Do you use Docker containers (maybe Vagrant)?
+How do you use different log levels (escpecially the lower ones)?
+How do you calculate the money spent on a project (is it based on man hours)?
 

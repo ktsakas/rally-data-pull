@@ -1,5 +1,11 @@
-var config = require("../config"),
-	l = config.logger;
+var config = require("../config/config"),
+	l = config.logger,
+	ElasticOrm = require('./elastic-orm'),
+	revisionsOrm = new ElasticOrm(
+		config.esClient,
+		config.elastic.index,
+		config.elastic.types.revision
+	);;
 
 var trackedFields = ["L3KanbanState", "ScheduleState"];
 
@@ -25,18 +31,18 @@ class Revisions {
 		return false;
 	}
 
-	static fromHook(parentID, hook) {
-		if (!Revisions.isUpdateHook()) return;
+	static fromHook(parentID, hookObj) {
+		if (!Revisions.isUpdateHook(hookObj)) return;
 
 		var revisions = [];
-		for (var id in hook.changes) {
-			var change = hook.changes[id];
+		for (var id in hookObj.changes) {
+			var change = hookObj.changes[id];
 
 			// Drop untracked fields
-			if ( trackedFields.indexOf(change.name) == -1 ) return;
+			if ( trackedFields.indexOf(change.name) == -1 ) continue;
 
 			revisions.push({
-				parentID: parentID,
+				parent: parentID,
 				name: change.name,
 				display_name: change.display_name,
 				value: change.value,
@@ -44,12 +50,14 @@ class Revisions {
 			});
 		}
 
-		return new Revisions(parentID, revisions);
+		return new Revisions(revisions);
 	}
 
 	save() {
-		esClient.bulkIndex(this.revisions);
+		revisionsOrm.bulkIndex(this.revisions);
+
+		return this;
 	}
 }
 
-module.export = Revisions;
+module.exports = Revisions;

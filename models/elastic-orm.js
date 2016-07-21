@@ -1,4 +1,4 @@
-var config = require('../config');
+var config = require('../config/config');
 
 /**
  * @class ESWrapper
@@ -40,12 +40,25 @@ class ElasticOrm {
 		return this.esClient.bulk({ body: this.arrayToBulk(array) });
 	}
 
-	index(obj) {
-		return this.esClient.index({
-			index: this.index,
-			type: this.type,
-			body: obj
+	getById(id) {
+		return this.esClient.get({
+			index: this._index,
+			type: this._type,
+			id: id
 		});
+	}
+
+	index(obj, id) {
+		var params = {
+			index: this._index,
+			type: this._type,
+			body: obj
+		};
+
+		// The id is optional
+		if (id) params.id = id;
+
+		return this.esClient.index(params);
 	}
 }
 

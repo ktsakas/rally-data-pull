@@ -1,25 +1,7 @@
-var config = require("../config"),
+var config = require("../config/config"),
 	l = config.logger;
 
 var trackedFields = ["L3KanbanState", "ScheduleState"];
-/*
-class NestedRevision {
-	constructor(revisionObj) {
-
-	}
-
-	static fromRallyChange(changeObj) {
-
-	}
-
-	getObj() {
-		return this.model;
-	}
-
-	save() {
-
-	}
-}*/
 
 class NestedRevisions {
 	constructor(nestedRevisions) {
@@ -43,16 +25,20 @@ class NestedRevisions {
 		return false;
 	}
 
-	static fromHook(hook) {
-		if (!Revisions.isUpdateHook()) return;
+	getObj() {
+		return this.nestedRevisions;
+	}
+
+	static fromHook(hookObj) {
+		if (!NestedRevisions.isUpdateHook(hookObj)) return;
 
 		var nestedRevisions = [];
 
 		// Get change version id
-		var version_id = hook.changes.find((change) => change.name == "VersionId").value;
+		var version_id = hookObj.changes.find((change) => change.name == "VersionId").value;
 
-		for (var id in hook.changes) {
-			var change = hook.changes[id];
+		for (var id in hookObj.changes) {
+			var change = hookObj.changes[id];
 
 			nestedRevisions[change.name] = {
 				display_name: change.display_name,
@@ -66,4 +52,4 @@ class NestedRevisions {
 	}
 }
 
-module.export = Revision;
+module.exports = NestedRevisions;

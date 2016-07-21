@@ -1,5 +1,5 @@
 const _ = require('underscore'),
-	  config = require('./config'),
+	  config = require('./config/config'),
 	  l = config.logger,
 	  esClient = config.esClient;
 

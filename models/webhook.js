@@ -1,17 +1,21 @@
-var config = require("../config"),
+var config = require("../config/config"),
 	l = config.logger,
 	ElasticOrm = require("./elastic-orm"),
-	webhookOrm = new ElasticOrm(config.esClient, "rally", "webhook");
+	webhookOrm = new ElasticOrm(
+		config.esClient,
+		config.elastic.index,
+		config.elastic.types.webhook
+	);
 
 class Webhook {
 	constructor(hookObj) {
-		hookObj.changes = keysToArray(hookObj.changes);
-		hookObj.state = keysToArray(hookObj.state);
+		hookObj.changes = Webhook.formatForElastic(hookObj.changes);
+		hookObj.state = Webhook.formatForElastic(hookObj.state);
 
 		this.hook = hookObj;
 	}
 
-	static normalizeValues(object) {
+	static fixFieldTypes(object) {
 		for (var key in object) {
 			if (typeof object[key] == "number") {
 				object["num_" + key] = object[key];
@@ -37,11 +41,11 @@ class Webhook {
 		return object;
 	}
 
-	static keysToArray(objects) {
+	static formatForElastic(objects) {
 		var array = [];
 
 		for (var key in objects) {
-			var obj = objects[key]; //normalizeValues(objects[key]);
+			var obj = Webhook.fixFieldTypes(objects[key]);
 
 			obj.key = key;
 			array.push(obj);
@@ -50,11 +54,17 @@ class Webhook {
 		return array;
 	}
 
+	getObj () {
+		return this.hook;
+	}
+
 	save () {
 		webhookOrm
-			.index(this.hook)
+			.index(this.hook, this.hook.message_id)
 			.catch((err) => l.error("Failed to insert webhook request into elastic.", err))
 			.then((res) => l.debug("Webhook request indexed into elastic."));
+
+		return this;
 	}
 }
 

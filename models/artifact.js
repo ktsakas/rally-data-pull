@@ -1,9 +1,18 @@
-var config = require("../config"),
+var config = require("../config/config"),
 	l = config.logger,
 	KeyMapper = require("./key-mapper"),
 	ElasticOrm = require("./elastic-orm"),
-	artifactOrm = new ElasticOrm(config.esClient, "rally", "rawArtifact"),
-	artifactOrm = new ElasticOrm(config.esClient, "rally", "artifact");
+	Promise = require("bluebird"),
+	artifactRawOrm = new ElasticOrm(
+		config.esClient,
+		config.elastic.index,
+		config.elastic.types.raw_artifact
+	),
+	artifactOrm = new ElasticOrm(
+		config.esClient,
+		config.elastic.index,
+		config.elastic.types.artifact
+	);
 
 var artifactMapper = new KeyMapper({
 	_ref: "Ref",
@@ -20,9 +29,17 @@ var artifactMapper = new KeyMapper({
 
 class Artifact {
 	constructor(artifactObj) {
-		if (config.debug) this.raw = artifactObj;
+		this.model = artifactObj;
+	}
 
-		this.model = artifactMapper.translate(artifactObj);
+	static fromElastic(id) {
+		return artifactOrm.getById(id)
+			.catch((err) => {
+				var errMsg = "Could not find artifact with id " + id + " in elastic.";
+				l.error(errMsg);
+				throw new Error(errMsg);
+			})
+			.then((resp) => new Artifact(resp));
 	}
 
 	static fromHook(hook) {
@@ -32,17 +49,24 @@ class Artifact {
 			artifactObj[field.name] = field.value;
 		});
 
+		if (config.debug) {
+			this.raw = artifactObj;
+			artifactRawOrm.index(this.raw);
+		}
+
+		artifactObj = artifactMapper.translate(artifactObj);
+
 		return new Artifact(artifactObj);
 	}
 
-	addRevisions (nestedRevisions) {
+	addNestedRevisions (nestedRevisions) {
 		if (!this.model.revisions) this.model.revisions = {};
 
 		for (var field in revisions.getObj()) {
 			this.model.revisions[field].push(revisions[field]);
 		}
 
-		this.save();
+		return this.save();
 	}
 
 	getObj() {
@@ -50,9 +74,9 @@ class Artifact {
 	}
 
 	save() {
-		if (config.debug) artifactRawOrm.index(this.raw);
-
 		artifactOrm.index(this.model);
+
+		return this;
 	}
 }
 

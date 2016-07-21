@@ -1,11 +1,15 @@
-var config = require('./config'),
+var config = require('./config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
 	ESObject = require('./models/elastic-orm'),
 	rally = require('rally'),
 	Artifact = require('./models/artifact');
 
-var artifactOrm = new ESObject(config.esClient, "test", "rally");
+var artifactOrm = new ESObject(
+	config.esClient,
+	config.elastic.index,
+	config.elastic.types.artifact
+);
 
 var rallyClient = rally({
 		user: config.rally.user,
@@ -58,7 +62,7 @@ class RallyUtils {
 	}
 
 	static pullAll () {
-		l.info("Indexing Rally data into /rally/pulltest ...");
+		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.types.artifact + " ...");
 
 		RallyUtils.pullFrom(1).then(function (response) {
 			for (

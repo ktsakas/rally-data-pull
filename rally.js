@@ -6,8 +6,7 @@ const _ = require('underscore'),
 /*var elasticsearch = require('elasticsearch'),
 	esClient = new elasticsearch.Client(config.elastic);
 */
-var artifactTranslator = require('./artifact-mapper'),
-	rallyUtils = require('./rally-utils');
+var rallyUtils = require('./rally-utils');
 
 
 /*function toElastic (artifacts) {
@@ -81,7 +80,4 @@ esClient
 	.ping()
 	.catch((err) => l.error("Unable to connect to elastic at " + config.elastic.host))
 	.then(() => l.info("Connected to elastic at: " + config.elastic.host))
-	.then(() => {
-		l.info("Indexing Rally data...");
-		rallyUtils.pullAll()
-	});
+	.then(() => rallyUtils.pullAll());

@@ -1,9 +1,11 @@
 var config = require("../config"),
 	l = config.logger,
-	KeyMapper = require("./key-mapper")
-	artifactOrm = new ESObject(config.esClient, "rally", "artifact");
+	KeyMapper = require("./key-mapper"),
+	ElasticOrm = require("./elastic-orm"),
+	artifactOrm = new ElasticOrm(config.esClient, "rally", "rawArtifact"),
+	artifactOrm = new ElasticOrm(config.esClient, "rally", "artifact");
 
-artifactMapper = new KeyMapper({
+var artifactMapper = new KeyMapper({
 	_ref: "Ref",
 	CreationDate: true,
 	ObjectID: true,
@@ -18,7 +20,9 @@ artifactMapper = new KeyMapper({
 
 class Artifact {
 	constructor(artifactObj) {
-		this.model = artifactObj;
+		if (config.debug) this.raw = artifactObj;
+
+		this.model = artifactMapper.translate(artifactObj);
 	}
 
 	static fromHook(hook) {
@@ -27,8 +31,6 @@ class Artifact {
 		hook.state.forEach(function (field) {
 			artifactObj[field.name] = field.value;
 		});
-
-		artifactObj = artifactMapper.translate(artifactObj);
 
 		return new Artifact(artifactObj);
 	}
@@ -43,11 +45,19 @@ class Artifact {
 		this.save();
 	}
 
+	getObj() {
+		return this.model;
+	}
+
 	save() {
+		if (config.debug) artifactRawOrm.index(this.raw);
+
 		artifactOrm.index(this.model);
 	}
 }
 
+
+/*
 Artifact.fromHook({
 	state: [
 		{
@@ -83,6 +93,6 @@ Artifact.fromHook({
 			"key": "c3d4f057-0781-4660-8ce7-bc8514bf0945"
 		}
 	]
-}).save();
+}).save();*/
 
-module.export = Artifact;
+module.exports = Artifact;

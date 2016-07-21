@@ -5,7 +5,7 @@ var config = require('./config'),
 	rally = require('rally'),
 	Artifact = require('./models/artifact');
 
-var artifactOrm = new ESObject(config.esClient, "rally", "pulltest");
+var artifactOrm = new ESObject(config.esClient, "test", "rally");
 
 var rallyClient = rally({
 		user: config.rally.user,
@@ -21,7 +21,8 @@ var rallyClient = rally({
 		}
 	});
 
-const PAGESIZE = 2000;
+
+const PAGESIZE = 200;
 
 class RallyUtils {
 	constructor() {
@@ -42,14 +43,14 @@ class RallyUtils {
 				var count = response.Results.length,
 					end = Math.min(start + PAGESIZE, response.TotalResultCount),
 					artifacts = response.Results.map((artifact) => {
-						Artifact.fromHook(artifact).getObj()
+						return new Artifact(artifact).getObj()
 					});
 
 				artifactOrm
 					.bulkIndex(artifacts)
 					.catch((err) => l.error("Could not insert artifacts " + start + " through " + end + " into elastic."))
 					.then(function (res) {
-						l.debug("Indexing artifacts " + start + " through " + end + " took " + res.took + "ms.");
+						l.debug("Artifacts " + start + " through " + end + " took " + res.took + "ms.");
 					});
 
 				return response;
@@ -57,6 +58,8 @@ class RallyUtils {
 	}
 
 	static pullAll () {
+		l.info("Indexing Rally data into /rally/pulltest ...");
+
 		RallyUtils.pullFrom(1).then(function (response) {
 			for (
 				var start = 1 + PAGESIZE;

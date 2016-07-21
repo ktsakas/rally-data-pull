@@ -47,7 +47,7 @@ class Revisions {
 		return new Revisions(parentID, revisions);
 	}
 
-	static save() {
+	save() {
 		esClient.bulkIndex(this.revisions);
 	}
 }

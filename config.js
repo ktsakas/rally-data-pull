@@ -11,6 +11,7 @@ var elastic = require('elasticsearch'),
 	})
 
 module.exports = {
+	debug: true,
 	logger: logger,
 	port: process.env.PORT || 3000,
 

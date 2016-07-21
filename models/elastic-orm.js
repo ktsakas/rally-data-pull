@@ -4,12 +4,12 @@ var config = require('../config');
  * @class ESWrapper
  * @extends ES
  */
-class ESObject {
+class ElasticOrm {
 	constructor(esClient, index, type) {
 		this.esClient = esClient;
 
-		this.index = index;
-		this.type = type;
+		this._index = index;
+		this._type = type;
 	}
 
 	/**
@@ -23,7 +23,7 @@ class ESObject {
 			batch = [];
 		
 		array.forEach(function (array) {
-			batch.push({ index: { "_index": self.index, "_type": self.type } });
+			batch.push({ index: { "_index": self._index, "_type": self._type } });
 			batch.push(array);
 		});
 
@@ -41,7 +41,7 @@ class ESObject {
 	}
 
 	index(obj) {
-		return client.index({
+		return this.esClient.index({
 			index: this.index,
 			type: this.type,
 			body: obj
@@ -49,4 +49,4 @@ class ESObject {
 	}
 }
 
-module.exports = ESObject;
+module.exports = ElasticOrm;

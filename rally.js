@@ -61,6 +61,21 @@ function pullAll(start) {
 	});
 }*/
 
+/*esClient.indices.create({
+	index: "rally",
+	body: {
+		mappings: {
+			artifact: {
+				properties: {}
+			},
+			revision: {
+				_parent: { type: "artifact" }
+			}
+		}
+	}
+}).catch((err) => {
+	l.error(err);
+});*/
 
 esClient
 	.ping()

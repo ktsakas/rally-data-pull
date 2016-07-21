@@ -1,4 +1,4 @@
-var config = require('./config');
+var config = require('../config');
 
 /**
  * @class ESWrapper
@@ -38,6 +38,14 @@ class ESObject {
 	 */
 	bulkIndex(array) {
 		return this.esClient.bulk({ body: this.arrayToBulk(array) });
+	}
+
+	index(obj) {
+		return client.index({
+			index: this.index,
+			type: this.type,
+			body: obj
+		});
 	}
 }
 

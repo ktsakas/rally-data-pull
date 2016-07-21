@@ -1,11 +1,11 @@
 var config = require('./config'),
 	l = config.logger,
 	Promise = require('bluebird'),
-	ESObject = require('./es-wrapper'),
+	ESObject = require('./models/elastic-orm'),
 	rally = require('rally'),
-	artifactMapper = require('./artifact-mapper');
+	Artifact = require('./models/artifact');
 
-var ESartifact = new ESObject(config.esClient, "rally", "pulltest");
+var artifactOrm = new ESObject(config.esClient, "rally", "pulltest");
 
 var rallyClient = rally({
 		user: config.rally.user,
@@ -28,10 +28,6 @@ class RallyUtils {
 
 	}
 
-	static saveWebhook () {
-		
-	}
-
 	static pullFrom (start) {
 		return Promise.promisify(rallyClient.query, { context: rallyClient })({
 				type: 'artifact',
@@ -45,10 +41,12 @@ class RallyUtils {
 			.then(function (response) {
 				var count = response.Results.length,
 					end = Math.min(start + PAGESIZE, response.TotalResultCount),
-					mappedArtifacts = response.Results.map((artifact) => artifactMapper.translate(artifact));
+					artifacts = response.Results.map((artifact) => {
+						Artifact.fromHook(artifact).getObj()
+					});
 
-				ESartifact
-					.bulkIndex(mappedArtifacts)
+				artifactOrm
+					.bulkIndex(artifacts)
 					.catch((err) => l.error("Could not insert artifacts " + start + " through " + end + " into elastic."))
 					.then(function (res) {
 						l.debug("Indexing artifacts " + start + " through " + end + " took " + res.took + "ms.");

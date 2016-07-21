@@ -6,7 +6,7 @@ var elastic = require('elasticsearch'),
 	winston = require('winston'),
 	logger = new (winston.Logger)({
 		transports: [
-			new (winston.transports.Console)({ level : 'silly' })
+			new (winston.transports.Console)({ prettyPrint: true, level: 'silly' })
 		]
 	})
 

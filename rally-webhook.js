@@ -12,7 +12,7 @@ app.use(bodyParser.json())
    .use(bodyParser.urlencoded({ extended: false }))
    .use(bodyParser.text());
 
-function normalizeValues(object) {
+/*function normalizeValues(object) {
 	for (var key in object) {
 		if (typeof object[key] == "number") {
 			object["num_" + key] = object[key];
@@ -42,14 +42,14 @@ function keysToArray(objects) {
 	var array = [];
 
 	for (var key in objects) {
-		var obj = normalizeValues(objects[key]);
+		var obj = objects[key]; //normalizeValues(objects[key]);
 
 		obj.key = key;
 		array.push(obj);
 	}
 
 	return array;
-}
+}*/
 
 app.post('/webhook', function (req, res) {
 	l.debug("Route /webhook was called.");

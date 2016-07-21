@@ -15,6 +15,7 @@ var config = require("../config/config"),
 
 var artifactMapper = new KeyMapper({
 	_ref: "Ref",
+	ObjectUUID: "_id",
 	CreationDate: true,
 	ObjectID: true,
 	FormattedID: true,
@@ -31,6 +32,15 @@ class Artifact {
 		this.model = artifactObj;
 	}
 
+	static saveRaw(rawArtifact) {
+		/*rawArtifact.thing = rawArtifact._type;
+		delete rawArtifact._type;
+
+		artifactRawOrm.create(rawArtifact).catch((err) => {
+			l.error("Failed to save raw artifact with id " + rawArtifact.ObjectUUID);
+		});*/
+	}
+
 	static fromElastic(id) {
 		return artifactOrm.getById(id)
 			.catch((err) => {
@@ -41,6 +51,14 @@ class Artifact {
 			.then((resp) => new Artifact(resp));
 	}
 
+	static fromAPI(artifactObj) {
+		if (config.debug) Artifact.saveRaw(artifactObj);
+
+		artifactObj = artifactMapper.translate(artifactObj);
+
+		return new Artifact(artifactObj);
+	}
+
 	static fromHook(hook) {
 		var artifactObj = {};
 
@@ -48,10 +66,7 @@ class Artifact {
 			artifactObj[field.name] = field.value;
 		});
 
-		if (config.debug) {
-			this.raw = artifactObj;
-			artifactRawOrm.index(this.raw);
-		}
+		if (config.debug) Artifact.saveRaw(artifactObj);
 
 		artifactObj = artifactMapper.translate(artifactObj);
 
@@ -73,7 +88,7 @@ class Artifact {
 	}
 
 	save() {
-		artifactOrm.index(this.model);
+		artifactOrm.index(this.model, this.model.ObjectUUID);
 
 		return this;
 	}

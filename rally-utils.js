@@ -33,6 +33,10 @@ class RallyUtils {
 
 	}
 
+	static indexToElastic() {
+
+	}
+
 	static pullFrom (start) {
 		return Promise.promisify(rallyClient.query, { context: rallyClient })({
 				type: 'artifact',
@@ -47,14 +51,13 @@ class RallyUtils {
 				var count = response.Results.length,
 					end = Math.min(start + PAGESIZE, response.TotalResultCount),
 					artifacts = response.Results.map((artifact) => {
-						return new Artifact(artifact).getObj()
+						return Artifact.fromAPI(artifact).getObj()
 					});
 
 				artifactOrm
 					.bulkIndex(artifacts)
 					.then(function (res) {
 						if (res.errors) {
-							l.debug(res.items[0]);
 							l.error("Could not insert artifacts " + start + " through " + end + " into elastic.");
 						} else {
 							l.debug("Artifacts " + start + " through " + end + " took " + res.took + "ms.");

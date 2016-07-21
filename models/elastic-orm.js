@@ -26,9 +26,10 @@ class ElasticOrm {
 		var self = this,
 			batch = [];
 		
-		array.forEach(function (array) {
-			batch.push({ index: { _index: self._index, _type: self._type } });
-			batch.push(array);
+		array.forEach(function (item) {
+			batch.push({ index: { _index: self._index, _type: self._type, _id: item._id } });
+			delete item._id;
+			batch.push(item);
 		});
 
 		return batch;
@@ -50,6 +51,19 @@ class ElasticOrm {
 			type: this._type,
 			id: id
 		});
+	}
+
+	create(obj, id) {
+		var params = {
+			index: this._index,
+			type: this._type,
+			body: obj
+		};
+
+		// The id is optional
+		if (id) params.id = id;
+
+		return this.esClient.create(params);
 	}
 
 	index(obj, id) {

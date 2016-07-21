@@ -30,7 +30,7 @@ app.post('/webhook', function (req, res) {
 	if (config.debug) hook.save();
 
 	// Find the affected artifact
-	Artifact.fromElastic(artifactID).then((artifact) => {
+	/*Artifact.fromElastic(artifactID).then((artifact) => {
 
 		// Save revision as separate type
 		var revisions = Revisions.fromHook(artifactID, hookObj);
@@ -45,7 +45,7 @@ app.post('/webhook', function (req, res) {
 
 	}).catch((err) => {
 		res.json({ error: err.message });
-	});
+	});*/
 });
 
 /**
@@ -54,12 +54,19 @@ app.post('/webhook', function (req, res) {
  * @param  {request}
  * @param  {response}
  */
-app.post('/pull', function (req, res) {
+app.get('/pull', function (req, res) {
 	esClient
 		.ping()
 		.catch((err) => l.error("Unable to connect to elastic at " + config.elastic.host))
 		.then(() => l.info("Connected to elastic at: " + config.elastic.host))
-		.then(() => rallyUtils.pullAll());
+		.then(() => rallyUtils.pullAll())
+		/*.catch((err) => {
+			res.json(err.message);
+			throw err;
+		})
+		.then(() => {
+			res.json({ success: true });
+		});*/
 });
 
 /**

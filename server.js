@@ -2,7 +2,9 @@ var express = require("express"),
 	app = express(),
 	bodyParser = require('body-parser'),
 	config = require('./config/config'),
-	l = config.logger;
+	l = config.logger,
+	esClient = config.esClient,
+	rallyUtils = require('./rally-utils');
 
 // Import models
 var Webhook = require('./models/webhook'),
@@ -47,6 +49,20 @@ app.post('/webhook', function (req, res) {
 });
 
 /**
+ * Call this route to pull in initial data.
+ * 
+ * @param  {request}
+ * @param  {response}
+ */
+app.post('/pull', function (req, res) {
+	esClient
+		.ping()
+		.catch((err) => l.error("Unable to connect to elastic at " + config.elastic.host))
+		.then(() => l.info("Connected to elastic at: " + config.elastic.host))
+		.then(() => rallyUtils.pullAll());
+});
+
+/**
  * Any route other than the webhook triggers a warning
  * and responds with links to elastic and kibana.
  * 
@@ -54,7 +70,7 @@ app.post('/webhook', function (req, res) {
  * @param  {response}
  */
 app.use(function(req, res){
-	l.warn("Called route other than /webhook.");
+	l.warn("Called invalid route.");
 
 	res.json({ elastic: config.elastic.host, kibana: config.kibana.host })
 });

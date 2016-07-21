@@ -37,7 +37,7 @@ class RallyUtils {
 		return Promise.promisify(rallyClient.query, { context: rallyClient })({
 				type: 'artifact',
 				scope: {
-					workspace: "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/5339961604",
+					workspace: config.rally.workspace,
 				},
 				start: start,
 				pageSize: PAGESIZE,
@@ -52,9 +52,13 @@ class RallyUtils {
 
 				artifactOrm
 					.bulkIndex(artifacts)
-					.catch((err) => l.error("Could not insert artifacts " + start + " through " + end + " into elastic."))
 					.then(function (res) {
-						l.debug("Artifacts " + start + " through " + end + " took " + res.took + "ms.");
+						if (res.errors) {
+							l.debug(res.items[0]);
+							l.error("Could not insert artifacts " + start + " through " + end + " into elastic.");
+						} else {
+							l.debug("Artifacts " + start + " through " + end + " took " + res.took + "ms.");
+						}
 					});
 
 				return response;

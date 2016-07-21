@@ -19,6 +19,9 @@ module.exports = {
 		user: process.env.USER,
 		pass: process.env.PASS,
 		server: "https://rally1.rallydev.com",
+
+		workspace: "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/5339961604",
+		project: null
 	},
 
 	kibana: {

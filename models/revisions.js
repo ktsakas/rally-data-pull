@@ -36,6 +36,7 @@ class Revisions {
 	static fromHook(parentID, hookObj) {
 		if (!Revisions.isUpdateHook(hookObj)) return;
 
+		var hookDate = hookObj.transaction.timestamp;
 		var revisions = [];
 		for (var id in hookObj.changes) {
 			var change = hookObj.changes[id];
@@ -48,7 +49,8 @@ class Revisions {
 				name: change.name,
 				display_name: change.display_name,
 				value: change.value,
-				old_value: change.old_value
+				old_value: change.old_value,
+				date: new Date(hookDate).toISOString()
 			});
 		}
 		console.log("revisions: ", revisions);

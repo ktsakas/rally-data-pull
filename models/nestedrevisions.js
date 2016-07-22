@@ -48,7 +48,7 @@ class NestedRevisions {
 				value: change.value,
 				old_value: change.old_value,
 				version_id: version_id,
-				date: hookDate
+				date: new Date(hookDate).toISOString()
 			};
 		}
 

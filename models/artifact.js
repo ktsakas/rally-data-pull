@@ -26,13 +26,14 @@ var artifactMapper = new KeyMapper({
 	AcceptedDate: true,
 	InProgressDate: true,
 	c_KanbanState: "KanbanState",
-	c_L3KanbanStage: "L3KanbanStage"
+	c_L3KanbanStage: "L3KanbanStage",
+	LastUpdateDate: true
 });
 
 class Artifact {
-	constructor(artifactObj, id) {
+	constructor(fields, id) {
 		if (id) this._id = id;
-		this.model = artifactObj;
+		this.model = fields;
 	}
 
 	static saveRaw(rawArtifact) {
@@ -57,48 +58,85 @@ class Artifact {
 	static fromAPI(artifactObj) {
 		if (config.debug) Artifact.saveRaw(artifactObj);
 
-		artifactObj = artifactMapper.translate(artifactObj);
+		var fields = artifactMapper.translate(artifactObj);
 
-		return new Artifact(artifactObj, artifactObj.ObjectUUID);
+		fields.L3KanbanStage = { Value: fields.L3KanbanStage };
+
+		if ( fields.L3KanbanStage.Value ) {
+			fields.L3KanbanStage.States = [{
+				Value: fields.L3KanbanStage.Value,
+				OldValue: null,
+				Entered: artifactObj.LastUpdateDate,
+				Exited: null
+			}]
+		}
+
+		return new Artifact(fields, fields.ObjectUUID);
 	}
 
 	static fromHook(hook) {
-		var artifactObj = {};
+		var fields = {};
 
 		hook.state.forEach(function (field) {
-			artifactObj[field.name] = field.value;
+			fields[field.name] = field.value;
 		});
 
-		if (config.debug) Artifact.saveRaw(artifactObj);
+		if (config.debug) Artifact.saveRaw(fields);
 
-		artifactObj = artifactMapper.translate(artifactObj);
+		fields = artifactMapper.translate(fields);
 
-		return new Artifact(artifactObj, artifactObj.ObjectUUID);
+		return new Artifact(fields, fields.ObjectUUID);
 	}
 
-	static latestRevDuration (revisions) {
-		var lastRev = revisions[ revisions.length - 1 ],
-			preLastRev = revisions[ revisions.length - 2 ];
+	static latestRevDuration (fieldRevs) {
+		var lastRev = fieldRevs[0],
+			preLastRev = fieldRevs[1];
 
 		return new Date(lastRev.date).getTime() - new Date(preLastRev.date).getTime();
 	}
 
-	addNestedRevisions (nestedRevs) {
-		nestedRevs = this.model.revisions || {};
+	updateFields (changes) {
+		var fields = this.model || {};
 
-		for (var field in nestedRevs) {
-			if (!nestedRevs[field]) nestedRevs[field] = [];
+		/*for (var field in changes) {
+			if (!fields[field]) fields[field] = {};
 
-			nestedRevs[field].unshift(nestedRevs[field]);
-		}
+			// Set current state
+			var state = {
+				Duration: -1,
+				Entered: changes[field].date,
+				Exited: "TODO",
+				OldValue: changes[field].old_value,
+				Value: changes[field].value
+			};
 
-		nestedRevs[ nested.length - 2 ].duration = Artifact.latestRevDuration(nestedRevs);
+			fields[field].States.unshift(state);
 
-		console.log("new revisions: ", this.model.revisions);
+			// Update the previous state's duration
+			fields[field].States[1].Duration =
+				new Date(fields[field].States[0].Entered).getTime() - new Date(fields[field].States[1].Entered).getTime();
+		}*/
 
-		artifactOrm.update({ revisions: nestedRevs }, this._id)
+		// Set current state
+		fields.L3KanbanStage.States.unshift({
+			Value: changes.c_L3KanbanStage.value,
+			OldValue: fields.L3KanbanStage.States[0].Value,
+			Entered: changes.c_L3KanbanStage.date,
+			Duration: null,
+			Exited: null
+		});
+
+		fields.L3KanbanStage.States[1].Exited = fields.L3KanbanStage.States[0].Entered;
+		fields.L3KanbanStage.States[1].Duration = 
+			new Date(fields.L3KanbanStage.States[1].Exited).getTime() - 
+				new Date(fields.L3KanbanStage.States[1].Entered).getTime();
+
+		console.log("new revisions: ", fields.L3KanbanStage.States);
+
+		var self = this;
+		artifactOrm.update(fields, this._id)
 			.then((res) => {
-				this.model.revisions = nestedRevs;
+				self.model = fields;
 
 				return res;
 			})

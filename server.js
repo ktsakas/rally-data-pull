@@ -42,7 +42,7 @@ app.post('/webhook', function (req, res) {
 
 		// Save revision in artifact object
 		var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();
-		artifact.addNestedRevisions(nestedRevisions);
+		artifact.updateFields(nestedRevisions);
 
 		// Respond with the stored webhook
 		res.json(hook.getObj());

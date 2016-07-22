@@ -1,3 +1,5 @@
+"use strict";
+
 if (!process.env.PROD) {
 	const dotenv = require('dotenv').config({ path: ".env" });
 }

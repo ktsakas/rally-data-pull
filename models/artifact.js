@@ -13,6 +13,8 @@ var config = require("../config/config"),
 		config.elastic.types.artifact
 	);
 
+"use strict";
+
 var artifactMapper = new KeyMapper({
 	_ref: "Ref",
 	ObjectUUID: "_id",

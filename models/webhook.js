@@ -7,6 +7,8 @@ var config = require("../config/config"),
 		config.elastic.types.webhook
 	);
 
+"use strict";
+
 class Webhook {
 	constructor(hookObj) {
 		hookObj.changes = Webhook.formatForElastic(hookObj.changes);

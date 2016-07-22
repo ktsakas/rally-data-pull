@@ -61,8 +61,6 @@ class Webhook {
 	}
 
 	save () {
-		l.debug("saving....");
-
 		webhookOrm
 			.index(this.hook, this.hook.message_id)
 			.catch((err) => l.error("Failed to insert webhook request into elastic.", err))

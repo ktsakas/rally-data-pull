@@ -34,6 +34,7 @@ class NestedRevisions {
 	static fromHook(hookObj) {
 		if (!NestedRevisions.isUpdateHook(hookObj)) return;
 
+		var hookDate = hookObj.transaction.timestamp;
 		var nestedRevisions = [];
 
 		// Get change version id
@@ -46,7 +47,8 @@ class NestedRevisions {
 				display_name: change.display_name,
 				value: change.value,
 				old_value: change.old_value,
-				version_id: version_id
+				version_id: version_id,
+				date: hookDate
 			};
 		}
 

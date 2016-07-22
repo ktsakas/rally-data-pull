@@ -80,6 +80,19 @@ class ElasticOrm {
 
 		return this.esClient.index(params);
 	}
+
+	update(partialObj, id) {
+		var params = {
+			index: this._index,
+			type: this._type,
+			body: { doc: partialObj }
+		};
+
+		// The id is optional
+		if (id) params.id = id;
+
+		return this.esClient.update(params);
+	}
 }
 
 module.exports = ElasticOrm;

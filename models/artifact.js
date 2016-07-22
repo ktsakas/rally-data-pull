@@ -1,3 +1,5 @@
+"use strict";
+
 var config = require("../config/config"),
 	l = config.logger,
 	KeyMapper = require("./key-mapper"),
@@ -12,8 +14,6 @@ var config = require("../config/config"),
 		config.elastic.index,
 		config.elastic.types.artifact
 	);
-
-"use strict";
 
 var artifactMapper = new KeyMapper({
 	_ref: "Ref",
@@ -30,7 +30,11 @@ var artifactMapper = new KeyMapper({
 });
 
 class Artifact {
-	constructor(artifactObj) {
+	constructor(artifactObj, id) {
+		l.debug("Creating artifact model.");
+		l.debug(artifactObj);
+
+		if (id) this._id = id;
 		this.model = artifactObj;
 	}
 
@@ -50,7 +54,7 @@ class Artifact {
 				l.error(errMsg);
 				throw new Error(errMsg);
 			})
-			.then((resp) => new Artifact(resp));
+			.then((resp) => new Artifact(resp._source, resp._id));
 	}
 
 	static fromAPI(artifactObj) {
@@ -58,7 +62,7 @@ class Artifact {
 
 		artifactObj = artifactMapper.translate(artifactObj);
 
-		return new Artifact(artifactObj);
+		return new Artifact(artifactObj, artifactObj.ObjectUUID);
 	}
 
 	static fromHook(hook) {
@@ -72,17 +76,26 @@ class Artifact {
 
 		artifactObj = artifactMapper.translate(artifactObj);
 
-		return new Artifact(artifactObj);
+		return new Artifact(artifactObj, artifactObj.ObjectUUID);
 	}
 
 	addNestedRevisions (nestedRevisions) {
 		if (!this.model.revisions) this.model.revisions = {};
 
-		for (var field in revisions.getObj()) {
-			this.model.revisions[field].push(revisions[field]);
+		for (var field in nestedRevisions) {
+			if (!this.model.revisions[field]) this.model.revisions[field] = [];
+
+			this.model.revisions[field].push(nestedRevisions[field]);
 		}
 
-		return this.save();
+		console.log("new revisions: ", this.model.revisions);
+
+		artifactOrm.update({ revisions: this.model.revisions }, this._id)
+			.catch((err) => {
+				l.error("Failed to update nested revisions in artifact with id " + this._id);
+			});
+
+		return this;
 	}
 
 	getObj() {
@@ -90,49 +103,10 @@ class Artifact {
 	}
 
 	save() {
-		artifactOrm.index(this.model, this.model.ObjectUUID);
+		artifactOrm.index(this.model, this._id);
 
 		return this;
 	}
 }
-
-
-/*
-Artifact.fromHook({
-	state: [
-		{
-			"value": null,
-			"type": "String",
-			"name": "c_PMS",
-			"display_name": "PMS",
-			"ref": null,
-			"key": "8f5b69ae-90ce-4b3f-ba92-653957f15a8b"
-		},
-		{
-			"value": null,
-			"type": "String",
-			"name": "c_InTheHands",
-			"display_name": "In The Hands",
-			"ref": null,
-			"key": "de98cfa4-a551-46e8-b427-7b2f28a1c8ca"
-		},
-		{
-			"value": null,
-			"type": "Text",
-			"name": "c_FinancialImpactCalculation",
-			"display_name": "Financial Impact Calculation",
-			"ref": null,
-			"key": "ef696b2e-c305-4852-aa56-a4c086666712"
-		},
-		{
-			"value": "05d9f598-d7c0-484b-b5cf-752f03df7227",
-			"type": "Raw",
-			"name": "ObjectUUID",
-			"display_name": "ObjectUUID",
-			"ref": null,
-			"key": "c3d4f057-0781-4660-8ce7-bc8514bf0945"
-		}
-	]
-}).save();*/
 
 module.exports = Artifact;

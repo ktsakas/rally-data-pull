@@ -41,7 +41,7 @@ class Revisions {
 			var change = hookObj.changes[id];
 
 			// Drop untracked fields
-			if ( trackedFields.indexOf(change.name) == -1 ) continue;
+			// if ( trackedFields.indexOf(change.name) == -1 ) continue;
 
 			revisions.push({
 				parent: parentID,
@@ -51,6 +51,7 @@ class Revisions {
 				old_value: change.old_value
 			});
 		}
+		console.log("revisions: ", revisions);
 
 		return new Revisions(revisions);
 	}

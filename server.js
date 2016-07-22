@@ -38,6 +38,8 @@ app.post('/webhook', function (req, res) {
 		var revisions = Revisions.fromHook(artifactID, hookObj);
 		revisions.save();
 
+		l.debug("After saving full revisions.");
+
 		// Save revision in artifact object
 		var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();
 		artifact.addNestedRevisions(nestedRevisions);
@@ -46,6 +48,7 @@ app.post('/webhook', function (req, res) {
 		res.json(hook.getObj());
 
 	}).catch((err) => {
+		l.error(err);		
 		res.json({ error: err.message });
 	});
 });

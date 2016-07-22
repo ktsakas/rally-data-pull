@@ -76,18 +76,32 @@ class Artifact {
 		return new Artifact(artifactObj, artifactObj.ObjectUUID);
 	}
 
-	addNestedRevisions (nestedRevisions) {
-		if (!this.model.revisions) this.model.revisions = {};
+	static latestRevDuration (revisions) {
+		var lastRev = revisions[ revisions.length - 1 ],
+			preLastRev = revisions[ revisions.length - 2 ];
 
-		for (var field in nestedRevisions) {
-			if (!this.model.revisions[field]) this.model.revisions[field] = [];
+		return new Date(lastRev.date).getTime() - new Date(preLastRev.date).getTime();
+	}
 
-			this.model.revisions[field].push(nestedRevisions[field]);
+	addNestedRevisions (nestedRevs) {
+		nestedRevs = this.model.revisions || {};
+
+		for (var field in nestedRevs) {
+			if (!nestedRevs[field]) nestedRevs[field] = [];
+
+			nestedRevs[field].unshift(nestedRevs[field]);
 		}
+
+		nestedRevs[ nested.length - 2 ].duration = Artifact.latestRevDuration(nestedRevs);
 
 		console.log("new revisions: ", this.model.revisions);
 
-		artifactOrm.update({ revisions: this.model.revisions }, this._id)
+		artifactOrm.update({ revisions: nestedRevs }, this._id)
+			.then((res) => {
+				this.model.revisions = nestedRevs;
+
+				return res;
+			})
 			.catch((err) => {
 				l.error("Failed to update nested revisions in artifact with id " + this._id);
 			});

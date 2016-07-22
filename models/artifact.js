@@ -31,9 +31,6 @@ var artifactMapper = new KeyMapper({
 
 class Artifact {
 	constructor(artifactObj, id) {
-		l.debug("Creating artifact model.");
-		l.debug(artifactObj);
-
 		if (id) this._id = id;
 		this.model = artifactObj;
 	}

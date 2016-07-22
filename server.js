@@ -30,7 +30,7 @@ app.post('/webhook', function (req, res) {
 	if (config.debug) hook.save();
 
 	// Find the affected artifact
-	/*Artifact.fromElastic(artifactID).then((artifact) => {
+	Artifact.fromElastic(artifactID).then((artifact) => {
 
 		// Save revision as separate type
 		var revisions = Revisions.fromHook(artifactID, hookObj);
@@ -45,7 +45,7 @@ app.post('/webhook', function (req, res) {
 
 	}).catch((err) => {
 		res.json({ error: err.message });
-	});*/
+	});
 });
 
 /**

@@ -1,0 +1,21 @@
+{
+	"keep": [
+		"_ref",
+		"ObjectUUID",
+		"CreationDate",
+		"ObjectID",
+		"FormattedID",
+		"Name",
+		"ScheduleState",
+		"AcceptedDate",
+		"InProgressDate",
+		"c_KanbanState",
+		"c_L3KanbanStage",
+		"LastUpdateDate"
+	],
+
+	"track": [
+		"c_L3KanbanStage",
+		"ScheduleState"
+	]
+}

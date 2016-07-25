@@ -9,7 +9,7 @@ var config = require("../config/config"),
 		config.elastic.types.revision
 	);;
 
-var trackedFields = ["L3KanbanState", "ScheduleState"];
+var trackedFields = ["c_L3KanbanState", "ScheduleState"];
 
 class Revisions {
 	constructor (revisions) {

@@ -15,20 +15,10 @@ var config = require("../config/config"),
 		config.elastic.types.artifact
 	);
 
-var artifactMapper = new KeyMapper({
-	_ref: "Ref",
-	ObjectUUID: "_id",
-	CreationDate: true,
-	ObjectID: true,
-	FormattedID: true,
-	Name: true,
-	ScheduleState: true,
-	AcceptedDate: true,
-	InProgressDate: true,
-	c_KanbanState: "KanbanState",
-	c_L3KanbanStage: "L3KanbanStage",
-	LastUpdateDate: true
-});
+var fs = require('fs'),
+	fieldConfig = JSON.parse(fs.readFileSync('config/artifact-fields.json', 'utf8'));
+
+var artifactUtil = require('./utils.js');
 
 class Artifact {
 	constructor(fields, id) {
@@ -58,18 +48,27 @@ class Artifact {
 	static fromAPI(artifactObj) {
 		if (config.debug) Artifact.saveRaw(artifactObj);
 
-		var fields = artifactMapper.translate(artifactObj);
+		var fields = artifactUtil.translate(artifactObj);
 
-		fields.L3KanbanStage = { Value: fields.L3KanbanStage };
+		// Initialize all fields that we are tracking
+		// if they are available in the artifact
+		fieldConfig.track.forEach((fieldName) => {
 
-		if ( fields.L3KanbanStage.Value ) {
-			fields.L3KanbanStage.States = [{
-				Value: fields.L3KanbanStage.Value,
-				OldValue: null,
-				Entered: artifactObj.LastUpdateDate,
-				Exited: null
-			}]
-		}
+			if (fields[fieldName]) {
+				fields[fieldName] = { Value: fields[fieldName] };
+
+				if ( fields[fieldName].Value ) {
+					// Duration and OldValue are always null
+					// in the most current state
+					fields[fieldName].States = [{
+						Value: fields[fieldName].Value,
+						OldValue: null,
+						Entered: artifactObj.LastUpdateDate,
+						Exited: null
+					}]
+				}
+			}
+		});
 
 		return new Artifact(fields, fields.ObjectUUID);
 	}
@@ -77,13 +76,13 @@ class Artifact {
 	static fromHook(hook) {
 		var fields = {};
 
-		hook.state.forEach(function (field) {
+		hook.state.forEach((field) => {
 			fields[field.name] = field.value;
 		});
 
 		if (config.debug) Artifact.saveRaw(fields);
 
-		fields = artifactMapper.translate(fields);
+		fields = artifactUtil.translate(fields);
 
 		return new Artifact(fields, fields.ObjectUUID);
 	}
@@ -98,48 +97,29 @@ class Artifact {
 	updateFields (changes) {
 		var fields = this.model || {};
 
-		/*for (var field in changes) {
-			if (!fields[field]) fields[field] = {};
+		fieldConfig.track.forEach((fieldName) => {
+			if ( !changes[fieldName] ) return;
 
 			// Set current state
-			var state = {
-				Duration: -1,
-				Entered: changes[field].date,
-				Exited: "TODO",
-				OldValue: changes[field].old_value,
-				Value: changes[field].value
-			};
+			fields[fieldName].States.unshift({
+				Value: changes[fieldName].value,
+				OldValue: fields[fieldName].States[0].Value,
+				Entered: changes[fieldName].date,
+				Duration: null,
+				Exited: null
+			});
 
-			fields[field].States.unshift(state);
+			fields[fieldName].States[1].Exited = fields[fieldName].States[0].Entered;
+			fields[fieldName].States[1].Duration = 
+				new Date(fields[fieldName].States[1].Exited).getTime() - 
+					new Date(fields[fieldName].States[1].Entered).getTime();
 
-			// Update the previous state's duration
-			fields[field].States[1].Duration =
-				new Date(fields[field].States[0].Entered).getTime() - new Date(fields[field].States[1].Entered).getTime();
-		}*/
-
-		// Set current state
-		fields.L3KanbanStage.States.unshift({
-			Value: changes.c_L3KanbanStage.value,
-			OldValue: fields.L3KanbanStage.States[0].Value,
-			Entered: changes.c_L3KanbanStage.date,
-			Duration: null,
-			Exited: null
+			console.log("new revisions: ", fields[fieldName].States);
 		});
-
-		fields.L3KanbanStage.States[1].Exited = fields.L3KanbanStage.States[0].Entered;
-		fields.L3KanbanStage.States[1].Duration = 
-			new Date(fields.L3KanbanStage.States[1].Exited).getTime() - 
-				new Date(fields.L3KanbanStage.States[1].Entered).getTime();
-
-		console.log("new revisions: ", fields.L3KanbanStage.States);
 
 		var self = this;
 		artifactOrm.update(fields, this._id)
-			.then((res) => {
-				self.model = fields;
-
-				return res;
-			})
+			.then((res) => self.model = fields)
 			.catch((err) => {
 				l.error("Failed to update nested revisions in artifact with id " + this._id);
 			});

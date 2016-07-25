@@ -35,8 +35,8 @@ class RallyUtils {
 
 	}
 
-	static indexToElastic() {
-
+	static createIndex() {
+		return Artifact.createIndex();
 	}
 
 	static pullFrom (start) {
@@ -73,15 +73,23 @@ class RallyUtils {
 	static pullAll () {
 		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.types.artifact + " ...");
 
-		RallyUtils.pullFrom(1).then(function (response) {
-			for (
-				var start = 1 + PAGESIZE;
-				start < response.TotalResultCount;
-				start += PAGESIZE
-			) {
-				RallyUtils.pullFrom(start);
-			}
-		});
+		RallyUtils.createIndex()
+			.catch((err) => {
+				l.error(err);
+			})
+			.then(() => {
+				l.debug("Mapping set for artifact type.");
+
+				RallyUtils.pullFrom(1).then(function (response) {
+					for (
+						var start = 1 + PAGESIZE;
+						start < response.TotalResultCount;
+						start += PAGESIZE
+					) {
+						RallyUtils.pullFrom(start);
+					}
+				})
+			});
 	}
 }
 

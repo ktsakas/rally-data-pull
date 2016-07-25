@@ -12,9 +12,10 @@ class Utils {
 	}
 
 	static removeUnusedFields (fieldsObj) {
+		var keepFields = Object.keys(fieldConfig.keep);
 
 		for (var fieldName in fieldsObj) {
-			if ( fieldConfig.keep.indexOf(fieldName) == -1 )
+			if ( keepFields.indexOf(fieldName) == -1 )
 				delete fieldsObj[fieldName];
 		}
 

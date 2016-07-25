@@ -60,6 +60,8 @@ app.post('/webhook', function (req, res) {
  * @param  {response}
  */
 app.get('/pull', function (req, res) {
+	l.debug("pull runs");
+
 	esClient
 		.ping()
 		.catch((err) => l.error("Unable to connect to elastic at " + config.elastic.host))

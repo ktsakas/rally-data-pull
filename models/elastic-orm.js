@@ -1,6 +1,7 @@
 "use strict";
 
-var config = require('../config/config');
+var config = require('../config/config'),
+	l = config.logger;
 
 /**
  * @class ESWrapper
@@ -66,6 +67,16 @@ class ElasticOrm {
 		if (id) params.id = id;
 
 		return this.esClient.create(params);
+	}
+
+	createIndex(obj) {
+		var params = {
+			index: this._index,
+			type: this._type,
+			body: obj
+		};
+
+		return this.esClient.indices.create(params);
 	}
 
 	index(obj, id) {

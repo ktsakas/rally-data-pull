@@ -26,6 +26,47 @@ class Artifact {
 		this.model = fields;
 	}
 
+	static createMapping() {
+		var mapping = {};
+
+		/*for (var fieldName in fieldConfig.keep) {
+			mapping[fieldName] = {
+				type: fieldConfig.keep[fieldName]
+			};
+		}*/
+
+		// Mapping for tracked fields
+		fieldConfig.track.forEach((fieldName) => {
+			mapping[fieldName] = {
+				properties: {
+					Value: { type: fieldConfig.keep[fieldName] },
+
+					States: {
+						type: "nested",
+
+						properties: {
+							Value: { type: fieldConfig.keep[fieldName] },
+							OldValue: { type: fieldConfig.keep[fieldName] },
+							Entered: { type: "date" },
+							Exited: { type: "date" }
+						}
+					}
+				}
+			};
+		});
+
+		return mapping;
+	}
+
+	static createIndex () {
+		var createObj = { mappings: {} };
+		createObj.mappings[config.elastic.types.artifact] = {
+			properties: Artifact.createMapping()
+		};
+
+		return artifactOrm.createIndex(createObj);
+	}
+
 	static saveRaw(rawArtifact) {
 		/*rawArtifact.thing = rawArtifact._type;
 		delete rawArtifact._type;

@@ -11,7 +11,7 @@ var express = require("express"),
 // Import models
 var Webhook = require('./models/webhook'),
 	Artifact = require('./models/artifact'),
-	Revisions = require('./models/revisions'),
+	State = require('./models/state'),
 	NestedRevisions = require('./models/nestedrevisions');
 
 app.use(bodyParser.json())
@@ -35,20 +35,20 @@ app.post('/webhook', function (req, res) {
 	Artifact.fromElastic(artifactID).then((artifact) => {
 
 		// Save revision as separate type
-		var revisions = Revisions.fromHook(artifactID, hookObj);
-		revisions.save();
+		var state = State.fromHook(artifactID, hookObj);
+		state.save();
 
 		l.debug("After saving full revisions.");
 
 		// Save revision in artifact object
-		var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();
-		artifact.updateFields(nestedRevisions);
+		/*var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();
+		artifact.updateFields(nestedRevisions);*/
 
 		// Respond with the stored webhook
 		res.json(hook.getObj());
 
 	}).catch((err) => {
-		l.error(err);		
+		l.error(err);
 		res.json({ error: err.message });
 	});
 });
@@ -60,8 +60,6 @@ app.post('/webhook', function (req, res) {
  * @param  {response}
  */
 app.get('/pull', function (req, res) {
-	l.debug("pull runs");
-
 	esClient
 		.ping()
 		.catch((err) => l.error("Unable to connect to elastic at " + config.elastic.host))

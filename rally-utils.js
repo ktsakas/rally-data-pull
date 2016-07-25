@@ -5,12 +5,18 @@ var config = require('./config/config'),
 	Promise = require('bluebird'),
 	ESObject = require('./models/elastic-orm'),
 	rally = require('rally'),
-	Artifact = require('./models/artifact');
+	Artifact = require('./models/artifact'),
+	State = require('./models/state');
 
 var artifactOrm = new ESObject(
 	config.esClient,
 	config.elastic.index,
 	config.elastic.types.artifact
+);
+
+var stateOrm = new ESObject(
+	config.esClient,
+	config.elastic.index
 );
 
 var rallyClient = rally({
@@ -35,8 +41,28 @@ class RallyUtils {
 
 	}
 
-	static createIndex() {
+	static createArtifactIndex() {
 		return Artifact.createIndex();
+	}
+
+	static storeArtifacts (results) {
+		artifacts = results.map((artifact) => {
+			return Artifact.fromAPI(artifact)
+		});
+
+		return artifactOrm.bulkIndex(artifacts);			
+	}
+
+	static storeStates(results) {
+		var states = [];
+
+		results.forEach((artifact) => {
+			var artifatctStates = State.fromArtifact(artifact);
+			
+			artifatctStates.forEach((state) => { states.push(state); });
+		});
+
+		return stateOrm.bulkIndex(states);
 	}
 
 	static pullFrom (start) {
@@ -51,20 +77,23 @@ class RallyUtils {
 			})
 			.then(function (response) {
 				var count = response.Results.length,
-					end = Math.min(start + PAGESIZE, response.TotalResultCount),
-					artifacts = response.Results.map((artifact) => {
-						return Artifact.fromAPI(artifact).getObj()
-					});
+					end = Math.min(start + PAGESIZE, response.TotalResultCount);
 
-				artifactOrm
-					.bulkIndex(artifacts)
-					.then(function (res) {
-						if (res.errors) {
-							l.error("Could not insert artifacts " + start + " through " + end + " into elastic.");
-						} else {
-							l.debug("Artifacts " + start + " through " + end + " took " + res.took + "ms.");
-						}
-					});
+				/*RallyUtils.storeArtifacts().then(function (res) {
+					if (res.errors) {
+						l.error("Could not insert artifacts " + start + " through " + end + " into elastic.");
+					} else {
+						l.debug("Artifacts " + start + " through " + end + " took " + res.took + "ms.");
+					}
+				});*/
+
+				RallyUtils.storeStates(response.Results).then(function (res) {
+					if (res.errors) {
+						l.error("Could not insert states for artifacts " + start + " through " + end + " into elastic.");
+					} else {
+						l.debug("State for artifacts " + start + " through " + end + " took " + res.took + "ms.");
+					}
+				});
 
 				return response;
 			});
@@ -73,23 +102,21 @@ class RallyUtils {
 	static pullAll () {
 		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.types.artifact + " ...");
 
-		RallyUtils.createIndex()
+		/*RallyUtils.createArtifactIndex()
 			.catch((err) => {
 				l.error(err);
 			})
-			.then(() => {
-				l.debug("Mapping set for artifact type.");
+			.then(() => {*/
 
-				RallyUtils.pullFrom(1).then(function (response) {
-					for (
-						var start = 1 + PAGESIZE;
-						start < response.TotalResultCount;
-						start += PAGESIZE
-					) {
-						RallyUtils.pullFrom(start);
-					}
-				})
-			});
+		RallyUtils.pullFrom(1).then(function (response) {
+			for (
+				var start = 1 + PAGESIZE;
+				start < response.TotalResultCount;
+				start += PAGESIZE
+			) {
+				RallyUtils.pullFrom(start);
+			}
+		});
 	}
 }
 

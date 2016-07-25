@@ -4,11 +4,6 @@ var config = require("../config/config"),
 	l = config.logger,
 	KeyMapper = require("./key-mapper"),
 	ElasticOrm = require("./elastic-orm"),
-	artifactRawOrm = new ElasticOrm(
-		config.esClient,
-		config.elastic.index,
-		config.elastic.types.raw_artifact
-	),
 	artifactOrm = new ElasticOrm(
 		config.esClient,
 		config.elastic.index,
@@ -48,7 +43,8 @@ class Artifact {
 							Value: { type: fieldConfig.keep[fieldName] },
 							OldValue: { type: fieldConfig.keep[fieldName] },
 							Entered: { type: "date" },
-							Exited: { type: "date" }
+							Exited: { type: "date" },
+							Duration: { type: "integer" },
 						}
 					}
 				}
@@ -67,15 +63,6 @@ class Artifact {
 		return artifactOrm.createIndex(createObj);
 	}
 
-	static saveRaw(rawArtifact) {
-		/*rawArtifact.thing = rawArtifact._type;
-		delete rawArtifact._type;
-
-		artifactRawOrm.create(rawArtifact).catch((err) => {
-			l.error("Failed to save raw artifact with id " + rawArtifact.ObjectUUID);
-		});*/
-	}
-
 	static fromElastic(id) {
 		return artifactOrm.getById(id)
 			.catch((err) => {
@@ -87,8 +74,6 @@ class Artifact {
 	}
 
 	static fromAPI(artifactObj) {
-		if (config.debug) Artifact.saveRaw(artifactObj);
-
 		var fields = artifactUtil.translate(artifactObj);
 
 		// Initialize all fields that we are tracking
@@ -105,7 +90,8 @@ class Artifact {
 						Value: fields[fieldName].Value,
 						OldValue: null,
 						Entered: artifactObj.LastUpdateDate,
-						Exited: null
+						Exited: null,
+						Duration: null,
 					}]
 				}
 			}
@@ -140,6 +126,8 @@ class Artifact {
 
 		fieldConfig.track.forEach((fieldName) => {
 			if ( !changes[fieldName] ) return;
+
+			fields[fieldName].Value = changes[fieldName].value;
 
 			// Set current state
 			fields[fieldName].States.unshift({

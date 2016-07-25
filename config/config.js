@@ -41,7 +41,7 @@ module.exports = {
 			webhook: "webhook",
 			raw_artifact: "raw_artifact",
 			artifact: "artifact",
-			revision: "revision"
+			state: "state"
 		}
 	},
 

@@ -9,14 +9,20 @@ var config = require('../config/config'),
  */
 class ElasticOrm {
 	constructor(esClient, index, type) {
-		if (!esClient || !index || !type) {
+		if (!esClient || !index) {
 			l.error("Missing required argument in ElasticOrm constructor.");
 		}
 
 		this.esClient = esClient;
 
 		this._index = index;
+		this._type = type || null;
+	}
+
+	setType(type) {
 		this._type = type;
+
+		return this;
 	}
 
 	/**
@@ -30,9 +36,13 @@ class ElasticOrm {
 			batch = [];
 		
 		array.forEach(function (item) {
-			batch.push({ index: { _index: self._index, _type: self._type, _id: item._id } });
-			delete item._id;
-			batch.push(item);
+			batch.push({ index: {
+				_index: self._index,
+				_type: item._type || self._type,
+				_id: item._id
+			}});
+
+			batch.push(item.getObj());
 		});
 
 		return batch;

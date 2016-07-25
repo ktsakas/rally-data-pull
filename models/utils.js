@@ -22,7 +22,7 @@ class Utils {
 		return fieldsObj;
 	}
 
-	static translate (fieldsObj) {
+	static translateArtifact (fieldsObj) {
 		return Utils.normalizeFieldNames(Utils.removeUnusedFields(fieldsObj));
 	}
 }

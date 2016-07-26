@@ -6,7 +6,7 @@ var config = require('./config/config'),
 	ESObject = require('./models/elastic-orm'),
 	rally = require('rally'),
 	Artifact = require('./models/artifact'),
-	State = require('./models/state');
+	States = require('./models/state').States;
 
 var artifactOrm = new ESObject(
 	config.esClient,
@@ -39,10 +39,6 @@ const PAGESIZE = 200;
 class RallyUtils {
 	constructor() {
 
-	}
-
-	static createArtifactIndex() {
-		return Artifact.createIndex();
 	}
 
 	static storeArtifacts (results) {
@@ -87,9 +83,12 @@ class RallyUtils {
 					}
 				});*/
 
-				RallyUtils.storeStates(response.Results).then(function (res) {
+				States.fromArtifacts(response.Results).save().then(function (res) {
 					if (res.errors) {
 						l.error("Could not insert states for artifacts " + start + " through " + end + " into elastic.");
+						
+						l.error("Sample error: ", res.items[0]);
+
 					} else {
 						l.debug("State for artifacts " + start + " through " + end + " took " + res.took + "ms.");
 					}
@@ -102,21 +101,28 @@ class RallyUtils {
 	static pullAll () {
 		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.types.artifact + " ...");
 
-		/*RallyUtils.createArtifactIndex()
+		/*Artifact.createIndex()
 			.catch((err) => {
 				l.error(err);
 			})
 			.then(() => {*/
 
-		RallyUtils.pullFrom(1).then(function (response) {
-			for (
-				var start = 1 + PAGESIZE;
-				start < response.TotalResultCount;
-				start += PAGESIZE
-			) {
-				RallyUtils.pullFrom(start);
-			}
-		});
+		States
+			.createMappings()
+			.catch((err) => {
+				l.error(err);
+			})
+			.then(() => {
+				RallyUtils.pullFrom(1).then(function (response) {
+					for (
+						var start = 1 + PAGESIZE;
+						start < response.TotalResultCount;
+						start += PAGESIZE
+					) {
+						RallyUtils.pullFrom(start);
+					}
+				});
+			});
 	}
 }
 

@@ -11,7 +11,7 @@ var express = require("express"),
 // Import models
 var Webhook = require('./models/webhook'),
 	Artifact = require('./models/artifact'),
-	State = require('./models/state'),
+	State = require('./models/state').State,
 	NestedRevisions = require('./models/nestedrevisions');
 
 app.use(bodyParser.json())
@@ -25,32 +25,19 @@ app.use(bodyParser.json())
  */
 app.post('/webhook', function (req, res) {
 	var hookObj = req.body.message,
-		hook = new Webhook(hookObj),
+		// hook = new Webhook(hookObj),
 		artifactID = hookObj.object_id;
 
-	// Save the raw webhook if we are debugging
-	if (config.debug) hook.save();
+	// Save revision as separate type
+	var state = State.fromHook(artifactID, hookObj);
+	state.save().then((res) => {});
 
-	// Find the affected artifact
-	Artifact.fromElastic(artifactID).then((artifact) => {
+	// Save revision in artifact object
+	/*var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();
+	artifact.updateFields(nestedRevisions);*/
 
-		// Save revision as separate type
-		var state = State.fromHook(artifactID, hookObj);
-		state.save();
-
-		l.debug("After saving full revisions.");
-
-		// Save revision in artifact object
-		/*var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();
-		artifact.updateFields(nestedRevisions);*/
-
-		// Respond with the stored webhook
-		res.json(hook.getObj());
-
-	}).catch((err) => {
-		l.error(err);
-		res.json({ error: err.message });
-	});
+	// Respond with the stored webhook
+	res.json(hookObj);
 });
 
 /**

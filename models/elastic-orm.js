@@ -1,7 +1,8 @@
 "use strict";
 
 var config = require('../config/config'),
-	l = config.logger;
+	l = config.logger,
+	Promise = require('bluebird');
 
 /**
  * @class ESWrapper
@@ -58,6 +59,23 @@ class ElasticOrm {
 		return this.esClient.bulk({ body: this.arrayToBulk(array) });
 	}
 
+	putMappings(mappings) {
+		var proms = [];
+
+		for (var type in mappings) {
+			var mapping = mappings[type],
+				p = this.esClient.indices.putMapping({
+					index: this._index,
+					type: type,
+					body: mapping
+				});
+
+			proms.push(p);
+		}
+
+		return Promise.all(proms);
+	}
+
 	getById(id) {
 		return this.esClient.get({
 			index: this._index,
@@ -77,6 +95,20 @@ class ElasticOrm {
 		if (id) params.id = id;
 
 		return this.esClient.create(params);
+	}
+
+	deleteIndex() {
+		return this.esClient.indices.delete({
+			index: this._index
+		});
+	}
+
+	existsIndex() {
+		var params = {
+			index: this._index
+		};
+
+		return this.esClient.indices.exists(params);
 	}
 
 	createIndex(obj) {
@@ -113,6 +145,32 @@ class ElasticOrm {
 		if (id) params.id = id;
 
 		return this.esClient.update(params);
+	}
+
+	filter(query) {
+		var params = {
+			index: this._index,
+			type: this._type,
+			body: {
+				query: {
+					bool: {
+						filter: query
+					}
+				}
+			}
+		};
+
+		return this.esClient.search(params);
+	}
+
+	typeExists(type) {
+		var params = {
+			index: this._index,
+			type: type,
+			body: {}
+		};
+
+		return this.esClient.exists(params);
 	}
 }
 

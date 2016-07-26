@@ -1,0 +1,21 @@
+{
+	"keep": {
+		"_ref": "string",
+		"ObjectUUID": "string",
+		"CreationDate": "date",
+		"ObjectID": "long",
+		"FormattedID": "string",
+		"Name": "string",
+		"ScheduleState": "string",
+		"AcceptedDate": "date",
+		"InProgressDate": "date",
+		"c_KanbanState": "string",
+		"c_L3KanbanStage": "string",
+		"LastUpdateDate": "date"
+	},
+
+	"track": [
+		"c_L3KanbanStage",
+		"ScheduleState"
+	]
+}

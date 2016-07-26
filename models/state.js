@@ -10,7 +10,7 @@ var config = require("../config/config"),
 	stateUtils = require('./utils.js');
 
 var fs = require('fs'),
-	fieldConfig = JSON.parse(fs.readFileSync('config/artifact-fields.json', 'utf8'));
+	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8'));
 
 class State {
 	constructor (stateObj, type, id) {
@@ -18,6 +18,22 @@ class State {
 		if (type) this._type = type;
 
 		this.model = stateObj;
+	}
+
+	static createMapping() {
+		var mapping = {};
+
+		for (var fieldName in fieldConfig.keep) {
+			mapping[fieldName] = {
+				type: fieldConfig.keep[fieldName]
+			};
+
+			if (fieldConfig.keep[fieldName] == "string") {
+				mapping[fieldName].index = "not_analyzed";
+			}
+		}
+
+		return mapping;
 	}
 
 	static isUpdateHook(hook) {
@@ -37,13 +53,119 @@ class State {
 		return false;
 	}
 
-	static findArtifact(params) {
+	static hookGetArtifact(hookObj) {
+		var fields = Object.keys(fieldConfig.keep),
+			artifactObj = {};
 
+		// console.log("fields: ", fields);
+		for (var id in hookObj.state) {
+			var state = hookObj.state[id];
+			// console.log("name: ", state.name);
+
+			if (fields.indexOf(state.name) != -1) {
+				if (typeof state.value == "string")
+					artifactObj[state.name] = state.value;
+				else if (state.value != null && typeof state.value == "object") 
+					artifactObj[state.name] = state.value.name;
+			}
+		}
+
+		return artifactObj;
 	}
 
-	static fromArtifact(artifactObj) {
+	static fromHook(parentID, hookObj) {
+		// if (!State.isUpdateHook(hookObj)) return;
+
+		var hookDate = hookObj.transaction.timestamp;
+		for (var id in hookObj.changes) {
+			var change = hookObj.changes[id];
+
+			// Drop untracked fields
+			if ( fieldConfig.track.indexOf(change.name) == -1 ) continue;
+
+			var stateObj = Object.assign({
+					DisplayName: change.display_name,
+					Value: change.value,
+					OldValue: change.old_value,
+					Entered: new Date(hookDate).toISOString()
+				}, State.hookGetArtifact(hookObj)),
+
+				state = new State(stateObj, change.name);
+
+			console.log("ITEM: ", State.hookGetArtifact(hookObj));
+
+			return state;
+		}
+	}
+
+	static findByArtifactID(id) {
+		return stateOrm.setType(this._id).filter([
+			{ term: { ObjectUUID: id } }
+		]).then((stateObj) => {
+			console.log(stateObj.hits.hits);
+
+			return new State(stateObj);
+		});
+	}
+
+	getObj() {
+		return this.model;
+	}
+
+	save() {
+		console.log("saving model: ", this.model);
+
+		return stateOrm.setType(this._type).index(this.model);
+	}
+}
+
+class States {
+	constructor (statesArr) {
+		this.models = statesArr;
+	}
+
+	createTypes() {
+		this.models.push(type);
+	}
+
+	static existsIndex() {		
+		return stateOrm.existsIndex().catch((err) => {
+			console.log(err);
+		});
+	}
+
+	static deleteIndex() {
+		return stateOrm.deleteIndex();
+	}
+
+	static createMappings () {
+		var mappings = {};
+
+		fieldConfig.track.forEach((type) => {
+			mappings[type] = {
+				properties: {}
+			};
+
+			for (var fieldName in fieldConfig.keep) {
+				var fieldType = fieldConfig.keep[fieldName];
+
+				mappings[type].properties[fieldName] = {
+					type: fieldType
+				};
+
+				if (fieldType == "string") {
+					mappings[type].properties[fieldName].index = "not_analyzed";
+				}
+			}
+		});
+
+		return stateOrm.putMappings(mappings).catch((err) => {
+			l.error(err);
+		});
+	}
+
+	appendArtifactStates(artifactObj) {
 		var fields = stateUtils.removeUnusedFields(artifactObj);
-		var states = [];
 
 		fieldConfig.track.forEach((fieldName) => {
 			if (fields[fieldName]) {
@@ -54,46 +176,46 @@ class State {
 					Value: fields[fieldName],
 				}, fields);
 
-				states.push( new State(state, fieldName) );
+				this.models.push( new State(state, fieldName) );
 			}
+		});
+	}
+
+	static fromArtifacts(artifacts) {
+		var states = new States([]);
+
+		artifacts.forEach((artifact) => {
+			states.appendArtifactStates(artifact);
 		});
 
 		return states;
 	}
 
-	static fromHook(parentID, hookObj) {
-		if (!Revisions.isUpdateHook(hookObj)) return;
+	toBulkQuery () {
+		var bulkQuery = [];
 
-		var hookDate = hookObj.transaction.timestamp;
-		var revisions = [];
-		for (var id in hookObj.changes) {
-			var change = hookObj.changes[id];
+		this.models.forEach((state) => {
+			bulkQuery.push({
+				index: {
+					_index: config.elastic.index,
+					_type: state._type
+				}
+			});
 
-			// Drop untracked fields
-			if ( fieldConfig.track.indexOf(change.name) == -1 ) continue;
+			bulkQuery.push(state.getObj());
+		});
 
-			var state = new State({
-				DisplayName: change.display_name,
-				Value: change.value,
-				OldValue: change.old_value,
-				Entered: new Date(hookDate).toISOString()
-			}, change.name);
-
-			state.save();
-		}
-
-		return new State(revisions);
-	}
-
-	getObj() {
-		return this.model;
+		return bulkQuery;
 	}
 
 	save() {
-		stateOrm.setType(this._type).index(this.model, this._id);
-
-		return this;
+		return stateOrm.esClient.bulk({
+			body: this.toBulkQuery()
+		});
 	}
 }
 
-module.exports = State;
+module.exports = {
+	State: State, 
+	States: States
+};

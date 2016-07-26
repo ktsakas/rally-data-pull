@@ -53,7 +53,7 @@ class Artifact {
 
 		return mapping;
 	}
-
+	
 	static createIndex () {
 		var createObj = { mappings: {} };
 		createObj.mappings[config.elastic.types.artifact] = {

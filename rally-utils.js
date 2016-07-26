@@ -1,5 +1,8 @@
 "use strict";
 
+var ProgressBar = require('progress');
+var rp = require('request-promise');
+
 var config = require('./config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
@@ -36,6 +39,13 @@ var rallyClient = rally({
 
 const PAGESIZE = 200;
 
+var fetchProgress = new ProgressBar('Fetching artifacts [:bar] :percent', {
+	complete: '=',
+	incomplete: ' ',
+	width: 40,
+	total: 1
+});
+
 class RallyUtils {
 	constructor() {
 
@@ -59,6 +69,24 @@ class RallyUtils {
 		});
 
 		return stateOrm.bulkIndex(states);
+	}
+
+	static pullHistory () {
+		rp({
+			timeout: 5000,
+			method: 'GET',
+			uri: 'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/5339961604/artifact/snapshot/query.js',
+			qs: {
+				find: '{"ObjectID":33645337948}',
+				fields: true,
+				hydrate: ["ScheduleState"]
+			},
+			json: true
+		}).then(function (res) {
+			l.debug(res);
+		}).catch(function (err) {
+			l.debug(err);
+		});
 	}
 
 	static pullFrom (start) {
@@ -85,12 +113,14 @@ class RallyUtils {
 
 				States.fromArtifacts(response.Results).save().then(function (res) {
 					if (res.errors) {
+						fetchProgress.terminate();
+
 						l.error("Could not insert states for artifacts " + start + " through " + end + " into elastic.");
 						
 						l.error("Sample error: ", res.items[0]);
 
 					} else {
-						l.debug("State for artifacts " + start + " through " + end + " took " + res.took + "ms.");
+						fetchProgress.tick(PAGESIZE);
 					}
 				});
 
@@ -107,6 +137,8 @@ class RallyUtils {
 			})
 			.then(() => {*/
 
+		fetchProgress.tick(0);
+
 		States
 			.createMappings()
 			.catch((err) => {
@@ -114,6 +146,9 @@ class RallyUtils {
 			})
 			.then(() => {
 				RallyUtils.pullFrom(1).then(function (response) {
+					fetchProgress.total = response.TotalResultCount;
+					fetchProgress.tick(PAGESIZE);
+
 					for (
 						var start = 1 + PAGESIZE;
 						start < response.TotalResultCount;
@@ -125,5 +160,7 @@ class RallyUtils {
 			});
 	}
 }
+
+RallyUtils.pullHistory();
 
 module.exports = RallyUtils;

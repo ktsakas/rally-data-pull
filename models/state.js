@@ -191,6 +191,31 @@ class States {
 		return states;
 	}
 
+	appendSnapshotStates(snapshotObj) {
+		var fields = snapshotObj.removeUnusedFields(snapshotObj);
+
+		for (var fieldName in snapshot._PreviousValues) {
+			var state = Object.assign({
+				Entered: snapshotObj.LastUpdateDate,
+				Exited: null,
+				OldValue: null,
+				Value: fields[fieldName],
+			}, fields);
+
+			this.models.push( new State(state, fieldName, snapshot._ObjectUUID) );
+		}
+	}
+
+	static fromSnapshots(snapshots) {
+		var states = new States([]);
+
+		res.Results.forEach((snapshot) => {
+			states.appendSnapshotStates(snapshotObj);
+		});
+
+		return states;
+	}
+
 	toBulkQuery () {
 		var bulkQuery = [];
 

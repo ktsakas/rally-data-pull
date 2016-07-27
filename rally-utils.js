@@ -1,6 +1,7 @@
 "use strict";
 
-var ProgressBar = require('progress');
+var Multiprogress = require("multi-progress");
+var multi = new Multiprogress(process.stderr);
 var rp = require('request-promise');
 
 var config = require('./config/config'),
@@ -39,12 +40,8 @@ var rallyClient = rally({
 
 const PAGESIZE = 200;
 
-var fetchProgress = new ProgressBar('Fetching artifacts [:bar] :percent', {
-	complete: '=',
-	incomplete: ' ',
-	width: 40,
-	total: 1
-});
+var fetchProgress,
+	historyProgress;
 
 class RallyUtils {
 	constructor() {
@@ -71,22 +68,51 @@ class RallyUtils {
 		return stateOrm.bulkIndex(states);
 	}
 
-	static pullHistory () {
-		rp({
-			timeout: 5000,
-			method: 'GET',
-			uri: 'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/5339961604/artifact/snapshot/query.js',
-			qs: {
-				find: '{"ObjectID":33645337948}',
-				fields: true,
-				hydrate: ["ScheduleState"]
-			},
-			json: true
-		}).then(function (res) {
-			l.debug(res);
-		}).catch(function (err) {
-			l.debug(err);
+	static gradualPullHistory (objectIDs, workspaceID) {
+		objectIDs.forEach((id) => {
+
+			rp({
+				timeout: 10000,
+				pagesize: 200,
+				method: 'GET',
+				uri: 'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + workspaceID + '/artifact/snapshot/query.js',
+				qs: {
+					find: '{"ObjectID":' + id + '}',
+					fields: true,
+					hydrate: '["ScheduleState"]'
+				},
+				auth: {
+					user: config.rally.user,
+					pass: config.rally.pass,
+					sendImmediately: false
+				},
+				json: true
+			}).then(function (res) {
+				States.fromSnapshots(res.Results).save();
+
+				historyProgress.tick();
+			}).catch(function (err) {
+				l.debug(err);
+			});
+
 		});
+	}
+
+	static pullHistory (objectIDs, workspaceID) {
+		var from = 0,
+			to = 10,
+			step = 10;
+
+		var t = setInterval(function () {
+			RallyUtils.gradualPullHistory(objectIDs.slice(from, to), workspaceID);
+
+			if (to <= objectIDs.length) {
+				from += step;
+				to += step;
+			} else {
+				clearInterval(t);
+			}
+		}, 2000);
 	}
 
 	static pullFrom (start) {
@@ -102,6 +128,10 @@ class RallyUtils {
 			.then(function (response) {
 				var count = response.Results.length,
 					end = Math.min(start + PAGESIZE, response.TotalResultCount);
+
+				var ObjectIDs = response.Results.map((result) => result.ObjectID);
+				
+				// console.log(ObjectIDs);
 
 				/*RallyUtils.storeArtifacts().then(function (res) {
 					if (res.errors) {
@@ -120,6 +150,8 @@ class RallyUtils {
 						l.error("Sample error: ", res.items[0]);
 
 					} else {
+						RallyUtils.pullHistory(ObjectIDs, 5339961604);
+
 						fetchProgress.tick(PAGESIZE);
 					}
 				});
@@ -137,7 +169,19 @@ class RallyUtils {
 			})
 			.then(() => {*/
 
-		fetchProgress.tick(0);
+		fetchProgress = multi.newBar('Fetching artifacts [:bar] :percent', {
+			complete: '=',
+			incomplete: ' ',
+			width: 40,
+			total: 100000
+		});
+
+		historyProgress = multi.newBar('Fetching revisions [:bar] :percent', {
+			complete: '=',
+			incomplete: ' ',
+			width: 40,
+			total: 100000
+		});
 
 		States
 			.createMappings()
@@ -147,6 +191,8 @@ class RallyUtils {
 			.then(() => {
 				RallyUtils.pullFrom(1).then(function (response) {
 					fetchProgress.total = response.TotalResultCount;
+					historyProgress.total = response.TotalResultCount;
+
 					fetchProgress.tick(PAGESIZE);
 
 					for (
@@ -161,6 +207,6 @@ class RallyUtils {
 	}
 }
 
-RallyUtils.pullHistory();
+RallyUtils.pullAll();
 
 module.exports = RallyUtils;

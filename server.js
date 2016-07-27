@@ -11,7 +11,7 @@ var express = require("express"),
 // Import models
 var Webhook = require('./models/webhook'),
 	Artifact = require('./models/artifact'),
-	State = require('./models/state').State,
+	State = require('./models/revision').State,
 	NestedRevisions = require('./models/nestedrevisions');
 
 app.use(bodyParser.json())

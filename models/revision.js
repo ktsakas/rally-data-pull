@@ -5,14 +5,15 @@ var config = require("../config/config"),
 	ElasticOrm = require('./elastic-orm'),
 	stateOrm = new ElasticOrm(
 		config.esClient,
-		config.elastic.index
+		config.elastic.index,
+		config.elastic.types.revision
 	),
 	stateUtils = require('./utils.js');
 
 var fs = require('fs'),
 	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8'));
 
-class State {
+class Revision {
 	constructor (stateObj, type, id) {
 		if (id) this._id = id;
 		if (type) this._type = type;
@@ -119,7 +120,7 @@ class State {
 	}
 }
 
-class States {
+class Revisions {
 	constructor (statesArr) {
 		this.models = statesArr;
 	}
@@ -128,7 +129,7 @@ class States {
 		this.models.push(type);
 	}
 
-	static existsIndex() {		
+	static existsIndex() {
 		return stateOrm.existsIndex().catch((err) => {
 			console.log(err);
 		});
@@ -138,30 +139,40 @@ class States {
 		return stateOrm.deleteIndex();
 	}
 
-	static createMappings () {
-		var mappings = {};
+	static parseMapping (schema) {
+		schema = schema || fieldConfig.schema;
+		var mapping = {};
 
-		fieldConfig.track.forEach((type) => {
-			mappings[type] = {
-				properties: {}
-			};
+		for (var fieldName in schema) {
+			var field = schema[fieldName];
 
-			for (var fieldName in fieldConfig.keep) {
-				var fieldType = fieldConfig.keep[fieldName];
-
-				mappings[type].properties[fieldName] = {
-					type: fieldType
+			if (typeof field == "string") {
+				mapping[fieldName] = { type: field };
+			} else if (typeof field == "object") {
+				mapping[fieldName] = {
+					type: "object",
+					properties: Revisions.parseMapping(field)
 				};
-
-				if (fieldType == "string") {
-					mappings[type].properties[fieldName].index = "not_analyzed";
-				}
 			}
-		});
 
-		return stateOrm.putMappings(mappings).catch((err) => {
-			l.error(err);
-		});
+			if (field == "string") {
+				mapping[fieldName].index = "not_analyzed";
+			}
+		}
+
+		return mapping;
+	}
+
+	static createMapping (schema) {
+		var map = Revisions.parseMapping(fieldConfig.schema);
+
+		return stateOrm.putMapping({
+				properties: map
+			})
+			.catch((err) => {
+				l.error("Failed to create mapping for revision.");
+				l.error(err);
+			});
 	}
 
 	appendArtifactStates(artifactObj) {
@@ -172,9 +183,9 @@ class States {
 				var state = Object.assign({
 					Entered: artifactObj.LastUpdateDate,
 					Exited: null,
-					OldValue: null,
-					Value: fields[fieldName],
 				}, fields);
+
+				state["Old" + fieldName] = fields[fieldName];
 
 				this.models.push( new State(state, fieldName) );
 			}
@@ -192,25 +203,30 @@ class States {
 	}
 
 	appendSnapshotStates(snapshotObj) {
-		var fields = snapshotObj.removeUnusedFields(snapshotObj);
+		var fields = stateUtils.getKeptFields(snapshotObj);
 
-		for (var fieldName in snapshot._PreviousValues) {
+		for (var fieldName in snapshotObj._PreviousValues) {
+
+			if ( fieldConfig.track.indexOf(fieldName) == -1 ) continue;
+
 			var state = Object.assign({
-				Entered: snapshotObj.LastUpdateDate,
-				Exited: null,
-				OldValue: null,
-				Value: fields[fieldName],
+				Entered: snapshotObj._ValidFrom,
+				Exited: snapshotObj._ValidTo,
 			}, fields);
 
-			this.models.push( new State(state, fieldName, snapshot._ObjectUUID) );
+			state["Old" + fieldName] = snapshotObj._PreviousValues[fieldName];
+
+			// l.debug("field: ", fieldName, state);
+
+			this.models.push( new State(state, fieldName, snapshotObj._ObjectUUID) );
 		}
 	}
 
 	static fromSnapshots(snapshots) {
 		var states = new States([]);
 
-		res.Results.forEach((snapshot) => {
-			states.appendSnapshotStates(snapshotObj);
+		snapshots.forEach((snapshot) => {
+			states.appendSnapshotStates(snapshot);
 		});
 
 		return states;
@@ -241,6 +257,6 @@ class States {
 }
 
 module.exports = {
-	State: State, 
-	States: States
+	Revision: Revision, 
+	Revisions: Revisions
 };

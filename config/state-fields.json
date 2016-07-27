@@ -1,21 +1,54 @@
 {
-	"keep": {
-		"_ref": "string",
-		"ObjectUUID": "string",
-		"CreationDate": "date",
-		"ObjectID": "long",
-		"FormattedID": "string",
-		"Name": "string",
+	"translation": {
+		"UpdatedField": null,
+
+		"Entered": "_ValidFrom",
+		"Exited": "_ValidTo",
+
+		"Story.ID": "ObjectID",
+		"Story.UUID": "_ObjectUUID",
+		"Story.FormattedID": "FormattedID",
+		"Story.Name": "Name",
+
+		"Project.ID": "Project.ObjectID",
+		"Project.Name": "Project.Name",
+
+		"ScheduleState": "ScheduleState",
+		"L3KanbanStage": "c_L3KanbanStage",
+		"LastUpdateDate": "c_LastUpdateDate",
+		"SalesforcePriority": "c_SalesforcePriority",
+		"StoryType": "c_StoryType",
+		"SalesforceCase": "c_SalesforceCase"
+	},
+
+	"schema": {
+		"UpdatedField": "string",
+		"Entered": "date",
+		"Exited": "date",
+
+
+		"Story": {
+			"ID": "long",
+			"UUID": "string",
+			"FormattedID": "string",
+			"Name": "string"
+		},
+
+		"Project": {
+			"ID": "long",
+			"Name": "string"
+		},
+
 		"ScheduleState": "string",
-		"AcceptedDate": "date",
-		"InProgressDate": "date",
-		"c_KanbanState": "string",
-		"c_L3KanbanStage": "string",
-		"LastUpdateDate": "date"
+		"L3KanbanStage": "string",
+		"LastUpdateDate": "date",
+		"SalesforcePriority": "string",
+		"StoryType": "string",
+		"SalesforceCase": "string"
 	},
 
 	"track": [
-		"c_L3KanbanStage",
+		"L3KanbanStage",
 		"ScheduleState"
 	]
 }

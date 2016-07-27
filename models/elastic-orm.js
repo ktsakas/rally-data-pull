@@ -76,6 +76,14 @@ class ElasticOrm {
 		return Promise.all(proms);
 	}
 
+	putMapping(mapping) {
+		return this.esClient.indices.putMapping({
+			index: this._index,
+			type: this._type,
+			body: mapping
+		});
+	}
+
 	getById(id) {
 		return this.esClient.get({
 			index: this._index,

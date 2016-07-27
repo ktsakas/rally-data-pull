@@ -7,7 +7,7 @@ Access to BitBucket.
 How do you do code reviews. Atlassian?
 `Do you write tests and how do you do QA testing?`
 `How do you pull data from 3rd party providers (is it custom per provider), do you scrape websites?`
-Did you buy webstorm?
+`Did you buy webstorm?`
 
 ## QUESTIONS
 `How do you manage packages in the frontend?`
@@ -15,4 +15,4 @@ Did you buy webstorm?
 `Do you use Docker containers (maybe Vagrant)?`
 `How do you use different log levels (escpecially the lower ones)?`
 `How do you calculate the money spent on a project (is it based on man hours)?`
-
+`When do you commit, is it only when the programs works or compiles?`

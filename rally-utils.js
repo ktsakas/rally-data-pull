@@ -1,5 +1,6 @@
 "use strict";
 
+const assert = require('assert');
 var Multiprogress = require("multi-progress");
 var multi = new Multiprogress(process.stderr);
 var rp = require('request-promise');
@@ -8,9 +9,8 @@ var config = require('./config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
 	ESObject = require('./models/elastic-orm'),
-	rally = require('rally'),
 	Artifact = require('./models/artifact'),
-	States = require('./models/state').States;
+	Revisions = require('./models/revision').Revisions;
 
 var artifactOrm = new ESObject(
 	config.esClient,
@@ -23,125 +23,72 @@ var stateOrm = new ESObject(
 	config.elastic.index
 );
 
-var rallyClient = rally({
-		user: config.rally.user,
-		pass: config.rally.pass,
-		apiVersion: 'v2.0',
-		server: config.rally.server,
-		requestOptions: {
-			headers: {
-				'X-RallyIntegrationName': 'User Story Kibana Analysis',
-				'X-RallyIntegrationVendor': 'TravelClick',
-				'X-RallyIntegrationVersion': '1.0'
-			}
-		}
-	});
+var RallyAPI = require("./rallyAPI");
 
 
 const PAGESIZE = 200;
 
-var fetchProgress,
+var totalArtifacts = null,
+	fetchProgress,
 	historyProgress;
 
 class RallyUtils {
-	constructor() {
+	static pullHistory (objectIDs, workspaceID) {
+		var promises = [];
 
-	}
-
-	static storeArtifacts (results) {
-		artifacts = results.map((artifact) => {
-			return Artifact.fromAPI(artifact)
-		});
-
-		return artifactOrm.bulkIndex(artifacts);			
-	}
-
-	static storeStates(results) {
-		var states = [];
-
-		results.forEach((artifact) => {
-			var artifatctStates = State.fromArtifact(artifact);
-			
-			artifatctStates.forEach((state) => { states.push(state); });
-		});
-
-		return stateOrm.bulkIndex(states);
-	}
-
-	static gradualPullHistory (objectIDs, workspaceID) {
 		objectIDs.forEach((id) => {
 
-			rp({
-				timeout: 10000,
-				pagesize: 200,
-				method: 'GET',
-				uri: 'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + workspaceID + '/artifact/snapshot/query.js',
-				qs: {
-					find: '{"ObjectID":' + id + '}',
-					fields: true,
-					hydrate: '["ScheduleState"]'
-				},
-				auth: {
-					user: config.rally.user,
-					pass: config.rally.pass,
-					sendImmediately: false
-				},
-				json: true
-			}).then(function (res) {
-				States.fromSnapshots(res.Results).save();
+			var p = RallyAPI
+				.getArtifactRevisions(id, workspaceID)
+				.then(function (res) {
 
-				historyProgress.tick();
-			}).catch(function (err) {
-				l.debug(err);
-			});
+					Revisions.fromSnapshots(res.Results).save().then(function (res) {
+						if (res.errors) {
+							l.error("Failed to insert snapshots.");
+							l.error("Sample error: ", res);
 
+						} else {
+							historyProgress.tick();
+						}
+					});
+
+				}).catch(function (err) {
+					l.debug(err);
+				});
+
+			promises.push(p);
+		});
+
+		return Promise.all(promises);
+	}
+
+	static pullHistoryGradually (artifactIDs, workspaceID, step) {
+		var from = 1,
+			p = Promise.resolve();
+
+		return p.then(function (res) {
+			if (from <= artifactIDs.length) {
+				var someIDs= artifactIDs.slice(from, from + step);
+				from += step;
+
+				return RallyUtils.pullHistory(someIDs, workspaceID);
+			} else {
+				return "done";
+			}
 		});
 	}
 
-	static pullHistory (objectIDs, workspaceID) {
-		var from = 0,
-			to = 10,
-			step = 10;
+	static pullArtifacts (start, pagesize) {
+		assert(pagesize <= 200);
 
-		var t = setInterval(function () {
-			RallyUtils.gradualPullHistory(objectIDs.slice(from, to), workspaceID);
-
-			if (to <= objectIDs.length) {
-				from += step;
-				to += step;
-			} else {
-				clearInterval(t);
-			}
-		}, 2000);
-	}
-
-	static pullFrom (start) {
-		return Promise.promisify(rallyClient.query, { context: rallyClient })({
-				type: 'artifact',
-				scope: {
-					workspace: config.rally.workspace,
-				},
-				start: start,
-				pageSize: PAGESIZE,
-				fetch: "true"
-			})
+		return RallyAPI
+			.getArtifacts(start, 200)
 			.then(function (response) {
-				var count = response.Results.length,
-					end = Math.min(start + PAGESIZE, response.TotalResultCount);
+				var end = Math.min(start + PAGESIZE, totalArtifacts);
 
 				var ObjectIDs = response.Results.map((result) => result.ObjectID);
 				
-				// console.log(ObjectIDs);
-
-				/*RallyUtils.storeArtifacts().then(function (res) {
-					if (res.errors) {
-						l.error("Could not insert artifacts " + start + " through " + end + " into elastic.");
-					} else {
-						l.debug("Artifacts " + start + " through " + end + " took " + res.took + "ms.");
-					}
-				});*/
-
-				States.fromArtifacts(response.Results).save().then(function (res) {
+				/*States.fromArtifacts(response.Results).save().then(function (res) {
 					if (res.errors) {
 						fetchProgress.terminate();
 
@@ -154,7 +101,13 @@ class RallyUtils {
 
 						fetchProgress.tick(PAGESIZE);
 					}
-				});
+				});*/
+
+
+				RallyUtils.pullHistoryGradually(ObjectIDs, 5339961604)
+					.then(() => {
+						fetchProgress.tick(PAGESIZE);
+					});
 
 				return response;
 			});
@@ -162,12 +115,6 @@ class RallyUtils {
 
 	static pullAll () {
 		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.types.artifact + " ...");
-
-		/*Artifact.createIndex()
-			.catch((err) => {
-				l.error(err);
-			})
-			.then(() => {*/
 
 		fetchProgress = multi.newBar('Fetching artifacts [:bar] :percent', {
 			complete: '=',
@@ -183,30 +130,28 @@ class RallyUtils {
 			total: 100000
 		});
 
-		States
-			.createMappings()
-			.catch((err) => {
-				l.error(err);
-			})
-			.then(() => {
-				RallyUtils.pullFrom(1).then(function (response) {
-					fetchProgress.total = response.TotalResultCount;
-					historyProgress.total = response.TotalResultCount;
+		Promise
+			.resolve([
+				RallyAPI.countArtifacts(),
+				Revisions.createMapping()
+			])
+			.spread((numOfArtifacts) => {
+				totalArtifacts = numOfArtifacts;
 
-					fetchProgress.tick(PAGESIZE);
+				fetchProgress.total = totalArtifacts;
+				historyProgress.total = totalArtifacts;
 
-					for (
-						var start = 1 + PAGESIZE;
-						start < response.TotalResultCount;
-						start += PAGESIZE
-					) {
-						RallyUtils.pullFrom(start);
-					}
-				});
+				for (
+					var start = 1;
+					start < totalArtifacts;
+					start += PAGESIZE
+				) {
+					RallyUtils.pullArtifacts(start, PAGESIZE);
+				}
 			});
 	}
 }
 
-RallyUtils.pullAll();
+RallyUtils.pullHistory();
 
 module.exports = RallyUtils;

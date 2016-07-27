@@ -1,5 +1,6 @@
 var config = require('./config/config'),
 	Promise = require('bluebird'),
+	rp = require('request-promise');
 	rally = require('rally'),
 	rallyClient = rally({
 		user: config.rally.user,

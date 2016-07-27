@@ -11,7 +11,9 @@ var config = require("../config/config"),
 	stateUtils = require('./utils.js');
 
 var fs = require('fs'),
-	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8'));
+	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8'))
+	schema = fieldConfig.schema,
+	tracked = fieldConfig.track;
 
 class Revision {
 	constructor (stateObj, type, id) {
@@ -139,6 +141,14 @@ class Revisions {
 		return stateOrm.deleteIndex();
 	}
 
+	static extendSchemaTracked () {
+		for (var fieldName in schema) {
+			if (tracked.indexOf(fieldName) != -1) {
+				schema["Prev" + fieldName] = schema[fieldName];
+			}
+		}
+	}
+
 	static parseMapping (schema) {
 		schema = schema || fieldConfig.schema;
 		var mapping = {};
@@ -164,10 +174,10 @@ class Revisions {
 	}
 
 	static createMapping (schema) {
-		var map = Revisions.parseMapping(fieldConfig.schema);
+		Revisions.extendSchemaTracked();
 
 		return stateOrm.putMapping({
-				properties: map
+				properties: Revisions.parseMapping(fieldConfig.schema)
 			})
 			.catch((err) => {
 				l.error("Failed to create mapping for revision.");
@@ -193,7 +203,7 @@ class Revisions {
 	}
 
 	static fromArtifacts(artifacts) {
-		var states = new States([]);
+		var states = new Revisions([]);
 
 		artifacts.forEach((artifact) => {
 			states.appendArtifactStates(artifact);
@@ -223,7 +233,7 @@ class Revisions {
 	}
 
 	static fromSnapshots(snapshots) {
-		var states = new States([]);
+		var states = new Revisions([]);
 
 		snapshots.forEach((snapshot) => {
 			states.appendSnapshotStates(snapshot);
@@ -232,7 +242,7 @@ class Revisions {
 		return states;
 	}
 
-	toBulkQuery () {
+	/*toBulkQuery () {
 		var bulkQuery = [];
 
 		this.models.forEach((state) => {
@@ -247,12 +257,10 @@ class Revisions {
 		});
 
 		return bulkQuery;
-	}
+	}*/
 
 	save() {
-		return stateOrm.esClient.bulk({
-			body: this.toBulkQuery()
-		});
+		return stateOrm.bulkIndex(this.models);
 	}
 }
 

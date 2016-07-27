@@ -3,7 +3,6 @@
 const assert = require('assert');
 var Multiprogress = require("multi-progress");
 var multi = new Multiprogress(process.stderr);
-var rp = require('request-promise');
 
 var config = require('./config/config'),
 	l = config.logger,
@@ -152,6 +151,6 @@ class RallyUtils {
 	}
 }
 
-RallyUtils.pullHistory();
+RallyUtils.pullHistory([33645337948], 5339961604);
 
 module.exports = RallyUtils;

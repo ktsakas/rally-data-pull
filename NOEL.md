@@ -16,3 +16,4 @@ How do you do code reviews. Atlassian?
 `How do you use different log levels (escpecially the lower ones)?`
 `How do you calculate the money spent on a project (is it based on man hours)?`
 `When do you commit, is it only when the programs works or compiles?`
+Do you use assertions?

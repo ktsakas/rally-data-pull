@@ -1,0 +1,91 @@
+{
+	"UpdatedField": "string",
+	"Entered": "date",
+	"Exited": "date",
+
+
+	"Story": {
+		"ID": "long",
+		"UUID": "string",
+		"FormattedID": "string",
+		"Name": "string",
+		"Type": "string",
+		"HasParent": "boolean",
+		"Parent": "long"
+	},
+
+	"Iteration": {
+		"Name": "string",
+		"ObjectID": "long",
+		"StartDate": "date",
+		"EndDate": "date"
+	},
+
+	"Release": {
+		"Name": "string",
+		"ObjectID": "long",
+		"StartDate": "date",
+		"ReleaseDate": "date"
+	},
+
+	"Project": {
+		"ID": "long",
+		"Name": "string"
+	},
+
+
+	"AccountServiceLevel": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"ChannelName": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"ChannelRank": {
+		"type": "long",
+		"null_value": "-1"
+	},
+	"CreationDate": "date",
+	"DataType": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"DirectChildrenCount": {
+		"type": "long",
+		"null_value": "-1"
+	},
+	"GMSComponent": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"L3KanbanStage": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"LastUpdateDate": "date",
+	"SalesforceCase": "string",
+	"SalesforcePriority": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"ScheduleState": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"Tags": {
+		"type": "string",
+		"null_value": []
+	},
+	"Owner": "long",
+	"Author": "long",
+
+	"PrevScheduleState": {
+		"type": "string",
+		"null_value": "N/A"
+	},
+	"PrevL3KanbanStage": {
+		"type": "string",
+		"null_value": "N/A"
+	}
+}

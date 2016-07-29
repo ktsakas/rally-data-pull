@@ -19,11 +19,11 @@ class Utils {
 
 	}
 
-	static renameFields (fieldsObj) {
+	static renameFields (fieldsObj, mode) {
 		for (var newName in translation) {
-			var fieldName = translation[newName];
+			var fieldName = translation[newName][mode];
 
-			if ( fieldsObj[fieldName] && fieldName != newName ) {
+			if ( typeof fieldsObj[fieldName] != "undefined" && fieldName != newName ) {
 				fieldsObj[newName] = fieldsObj[fieldName];
 				delete fieldsObj[fieldName];
 			}
@@ -68,7 +68,7 @@ class Utils {
 testObj = Utils.flatten(testObj);
 // l.debug( "flattened obj: ", testObj );
 
-Utils.renameFields(testObj);
+Utils.renameFields(testObj, 'api');
 // l.debug( "renamed fields: ", testObj );
 
 Utils.removeUnused(testObj);
@@ -76,5 +76,6 @@ Utils.removeUnused(testObj);
 
 testObj = Utils.unflatten(testObj);
 // l.debug( "unflattened obj: ", testObj );
+// l.debug( "keys: ", Object.keys(testObj) );
 
 module.exports = Utils;

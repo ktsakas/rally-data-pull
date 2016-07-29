@@ -22,8 +22,8 @@ module.exports = {
 		pass: process.env.PASS,
 		server: "https://rally1.rallydev.com",
 
-		workspace: "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/5339961604",
-		project: null
+		workspaceID: 6692415259,// 5339961604,
+		projectID: 9052682378,
 	},
 
 	kibana: {

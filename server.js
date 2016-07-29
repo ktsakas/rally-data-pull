@@ -29,8 +29,8 @@ app.post('/webhook', function (req, res) {
 		artifactID = hookObj.object_id;
 
 	// Save revision as separate type
-	var state = State.fromHook(artifactID, hookObj);
-	state.save().then((res) => {});
+	var revision = Revision.fromHook(artifactID, hookObj);
+	revision.save().then((res) => {});
 
 	// Save revision in artifact object
 	/*var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();

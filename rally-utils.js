@@ -28,53 +28,56 @@ var RallyAPI = require("./rallyAPI");
 const PAGESIZE = 200;
 
 var totalArtifacts = null,
+	ObjectIDs = [],
 	fetchProgress,
 	historyProgress;
 
 class RallyUtils {
-	static pullHistory (objectIDs, workspaceID) {
-		var promises = [];
+	constructor () {
+		
+	}
 
-		objectIDs.forEach((id) => {
+	static pullHistory (id, workspaceID) {
+		return RallyAPI
+			.getArtifactRevisions(id, workspaceID)
+			.then(function (res) {
 
-			var p = RallyAPI
-				.getArtifactRevisions(id, workspaceID)
-				.then(function (res) {
+				Revisions.fromSnapshots(res.Results).save().then(function (res) {
+					if (res.errors) {
+						l.error("Failed to insert snapshots.");
+						l.error("Sample error: ", res);
 
-					Revisions.fromSnapshots(res.Results).save().then(function (res) {
-						if (res.errors) {
-							l.error("Failed to insert snapshots.");
-							l.error("Sample error: ", res);
-
-						} else {
-							historyProgress.tick();
-						}
-					});
-
-				}).catch(function (err) {
-					l.debug(err);
+					} else {
+						historyProgress.tick();
+					}
 				});
 
-			promises.push(p);
-		});
-
-		return Promise.all(promises);
+			}).catch(function (err) {
+				l.debug(err);
+			});
 	}
 
 	static pullHistoryGradually (artifactIDs, workspaceID, step) {
-		var from = 1,
-			p = Promise.resolve();
+		var p = Promise.resolve(),
+			from = 0;
 
-		return p.then(function (res) {
-			if (from <= artifactIDs.length) {
-				var someIDs= artifactIDs.slice(from, from + step);
-				from += step;
+		for (var times= 0; times < artifactIDs.length; times += step) {
+			p = p
+				.then(() => {
+					// console.log("from " + from + " to " + (from + step) + "\n");
 
-				return RallyUtils.pullHistory(someIDs, workspaceID);
-			} else {
-				return "done";
-			}
-		});
+					var someProms = artifactIDs
+						.slice(from, from + step)
+						.map((id) => {
+							return RallyUtils.pullHistory(id, workspaceID);
+						});
+					from += step;
+
+					return Promise.all(someProms);
+				});
+		}
+
+		return p;
 	}
 
 	static pullArtifacts (start, pagesize) {
@@ -82,31 +85,21 @@ class RallyUtils {
 
 		return RallyAPI
 			.getArtifacts(start, 200)
+			.catch((err) => {
+				l.debug(err);
+				return true;
+			})
 			.then(function (response) {
 				var end = Math.min(start + PAGESIZE, totalArtifacts);
 
-				var ObjectIDs = response.Results.map((result) => result.ObjectID);
-				
-				/*States.fromArtifacts(response.Results).save().then(function (res) {
-					if (res.errors) {
-						fetchProgress.terminate();
+				if (!response.Results) {
+					l.error("Failed to pull artifacts.");
+					return response;
+				}
 
-						l.error("Could not insert states for artifacts " + start + " through " + end + " into elastic.");
-						
-						l.error("Sample error: ", res.items[0]);
+				response.Results.forEach((result) => ObjectIDs.push(result.ObjectID));
 
-					} else {
-						RallyUtils.pullHistory(ObjectIDs, 5339961604);
-
-						fetchProgress.tick(PAGESIZE);
-					}
-				});*/
-
-
-				RallyUtils.pullHistoryGradually(ObjectIDs, 5339961604)
-					.then(() => {
-						fetchProgress.tick(PAGESIZE);
-					});
+				fetchProgress.tick(PAGESIZE);
 
 				return response;
 			});
@@ -114,20 +107,6 @@ class RallyUtils {
 
 	static pullAll () {
 		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.types.artifact + " ...");
-
-		fetchProgress = multi.newBar('Fetching artifacts [:bar] :percent', {
-			complete: '=',
-			incomplete: ' ',
-			width: 40,
-			total: 100000
-		});
-
-		historyProgress = multi.newBar('Fetching revisions [:bar] :percent', {
-			complete: '=',
-			incomplete: ' ',
-			width: 40,
-			total: 100000
-		});
 
 		Promise
 			.resolve([
@@ -137,20 +116,43 @@ class RallyUtils {
 			.spread((numOfArtifacts) => {
 				totalArtifacts = numOfArtifacts;
 
+				l.info("Total number of artifacts: " + totalArtifacts);
+
+				fetchProgress = multi.newBar('Fetching artifacts [:bar] :percent', {
+					complete: '=',
+					incomplete: ' ',
+					width: 40,
+					total: 100000
+				});
+
+				historyProgress = multi.newBar('Fetching revisions [:bar] :percent', {
+					complete: '=',
+					incomplete: ' ',
+					width: 40,
+					total: 100000
+				});
+
 				fetchProgress.total = totalArtifacts;
 				historyProgress.total = totalArtifacts;
 
+				var promises = [];
 				for (
 					var start = 1;
 					start < totalArtifacts;
 					start += PAGESIZE
 				) {
-					RallyUtils.pullArtifacts(start, PAGESIZE);
+					promises.push( RallyUtils.pullArtifacts(start, PAGESIZE) );
 				}
+
+				Promise
+					.all(promises)
+					.then(() => {
+						RallyUtils.pullHistoryGradually(ObjectIDs, 6692415259, 500)//5339961604, 500)
+					});
 			});
 	}
 }
 
-RallyUtils.pullHistory([33645337948], 5339961604);
+RallyUtils.pullAll();
 
 module.exports = RallyUtils;

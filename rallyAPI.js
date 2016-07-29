@@ -16,17 +16,36 @@ var config = require('./config/config'),
 		}
 	});
 
+var workspaceURL = "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/" + config.rally.workspaceID,
+	projectURL = "https://rally1.rallydev.com/slm/webservice/v2.0/project/" + config.rally.projectID;
+
 class RallyAPI {
+	/*static pickSample(res) {
+		var SampleFormattedIDs = ['US75364'];
+
+		if ( SampleFormattedIDs.indexOf(res.FormattedID) != -1 ) {
+			l.debug("Sampled story with formatted id " + res.FormattedID);
+
+			fs.writeFile(
+				"./trash/art-" + res.FormattedID,
+				JSON.stringify(res, null, 4),
+				() => {}
+			);
+		}
+
+		return res;
+	}*/
+
 	static getArtifactRevisions (artifactID, workspaceID) {
 		return rp({
-			timeout: 15000,
+			timeout: 30000,
 			pagesize: 200,
 			method: 'GET',
-			uri: 'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + workspaceID + '/artifact/snapshot/query.js',
+			uri: 'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + config.rally.workspaceID + '/artifact/snapshot/query.js',
 			qs: {
 				find: '{"ObjectID":' + artifactID + '}',
 				fields: true,
-				hydrate: '["ScheduleState"]'
+				hydrate: '["ScheduleState","_PreviousValues.ScheduleState"]'
 			},
 			auth: {
 				user: config.rally.user,
@@ -38,25 +57,34 @@ class RallyAPI {
 	}
 
 	static getArtifacts (start, pagesize) {
-		return Promise.promisify(rallyClient.query, { context: rallyClient })({
+		var options = {
 			type: 'artifact',
-			scope: {
-				workspace: config.rally.workspace,
-			},
+			scope: { workspace: workspaceURL },
 			start: start,
 			pageSize: pagesize,
 			fetch: "true"
-		});
+		};
+
+		if (config.rally.projectID) {
+			options.scope.project = projectURL;
+		}
+
+		return Promise.promisify(rallyClient.query, { context: rallyClient })(options);
 	}
 
 	static countArtifacts () {
-		return Promise.promisify(rallyClient.query, { context: rallyClient })({
+		var options = {
 			type: 'artifact',
-			scope: {
-				workspace: config.rally.workspace,
-			},
+			scope: { workspace: workspaceURL },
 			pageSize: 1
-		}).then((res) => res.TotalResultCount);
+		};
+
+		if (config.rally.projectID) {
+			options.scope.project = projectURL;
+		}
+
+		return Promise.promisify(rallyClient.query, { context: rallyClient })(options)
+			.then((res) => res.TotalResultCount);
 	}
 }
 

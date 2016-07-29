@@ -39,7 +39,7 @@ class ElasticOrm {
 		array.forEach(function (item) {
 			batch.push({ index: {
 				_index: self._index,
-				_type: item._type || self._type,
+				_type: self._type,
 				_id: item._id
 			}});
 

@@ -8,17 +8,23 @@ var config = require("../config/config"),
 		config.elastic.index,
 		config.elastic.types.revision
 	),
-	stateUtils = require('./utils.js');
+	parseUtils = require('./utils.js');
 
 var fs = require('fs'),
-	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8'))
-	schema = fieldConfig.schema,
-	tracked = fieldConfig.track;
+	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8')),
+	schema = JSON.parse(fs.readFileSync('config/schema.json', 'utf8'));
+
+const assert = require('assert');
+
+// Create a null valued object of all schema fields
+var nulledValues = {};
+for (var field in schema) {
+	nulledValues[field] = null;
+}
 
 class Revision {
-	constructor (stateObj, type, id) {
+	constructor (stateObj, id) {
 		if (id) this._id = id;
-		if (type) this._type = type;
 
 		this.model = stateObj;
 	}
@@ -122,149 +128,4 @@ class Revision {
 	}
 }
 
-class Revisions {
-	constructor (statesArr) {
-		this.models = statesArr;
-	}
-
-	createTypes() {
-		this.models.push(type);
-	}
-
-	static existsIndex() {
-		return stateOrm.existsIndex().catch((err) => {
-			console.log(err);
-		});
-	}
-
-	static deleteIndex() {
-		return stateOrm.deleteIndex();
-	}
-
-	static extendSchemaTracked () {
-		for (var fieldName in schema) {
-			if (tracked.indexOf(fieldName) != -1) {
-				schema["Prev" + fieldName] = schema[fieldName];
-			}
-		}
-	}
-
-	static parseMapping (schema) {
-		schema = schema || fieldConfig.schema;
-		var mapping = {};
-
-		for (var fieldName in schema) {
-			var field = schema[fieldName];
-
-			if (typeof field == "string") {
-				mapping[fieldName] = { type: field };
-			} else if (typeof field == "object") {
-				mapping[fieldName] = {
-					type: "object",
-					properties: Revisions.parseMapping(field)
-				};
-			}
-
-			if (field == "string") {
-				mapping[fieldName].index = "not_analyzed";
-			}
-		}
-
-		return mapping;
-	}
-
-	static createMapping (schema) {
-		Revisions.extendSchemaTracked();
-
-		return stateOrm.putMapping({
-				properties: Revisions.parseMapping(fieldConfig.schema)
-			})
-			.catch((err) => {
-				l.error("Failed to create mapping for revision.");
-				l.error(err);
-			});
-	}
-
-	appendArtifactStates(artifactObj) {
-		var fields = stateUtils.removeUnusedFields(artifactObj);
-
-		fieldConfig.track.forEach((fieldName) => {
-			if (fields[fieldName]) {
-				var state = Object.assign({
-					Entered: artifactObj.LastUpdateDate,
-					Exited: null,
-				}, fields);
-
-				state["Old" + fieldName] = fields[fieldName];
-
-				this.models.push( new State(state, fieldName) );
-			}
-		});
-	}
-
-	static fromArtifacts(artifacts) {
-		var states = new Revisions([]);
-
-		artifacts.forEach((artifact) => {
-			states.appendArtifactStates(artifact);
-		});
-
-		return states;
-	}
-
-	appendSnapshotStates(snapshotObj) {
-		var fields = stateUtils.getKeptFields(snapshotObj);
-
-		for (var fieldName in snapshotObj._PreviousValues) {
-
-			if ( fieldConfig.track.indexOf(fieldName) == -1 ) continue;
-
-			var state = Object.assign({
-				Entered: snapshotObj._ValidFrom,
-				Exited: snapshotObj._ValidTo,
-			}, fields);
-
-			state["Old" + fieldName] = snapshotObj._PreviousValues[fieldName];
-
-			// l.debug("field: ", fieldName, state);
-
-			this.models.push( new State(state, fieldName, snapshotObj._ObjectUUID) );
-		}
-	}
-
-	static fromSnapshots(snapshots) {
-		var states = new Revisions([]);
-
-		snapshots.forEach((snapshot) => {
-			states.appendSnapshotStates(snapshot);
-		});
-
-		return states;
-	}
-
-	/*toBulkQuery () {
-		var bulkQuery = [];
-
-		this.models.forEach((state) => {
-			bulkQuery.push({
-				index: {
-					_index: config.elastic.index,
-					_type: state._type
-				}
-			});
-
-			bulkQuery.push(state.getObj());
-		});
-
-		return bulkQuery;
-	}*/
-
-	save() {
-		return stateOrm.bulkIndex(this.models);
-	}
-}
-
-module.exports = {
-	Revision: Revision, 
-	Revisions: Revisions
-};
+module.exports = Revision;

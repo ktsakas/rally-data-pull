@@ -2,9 +2,9 @@
 How to debug JAVA heap dump.
 How do you analyze logs.
 List of blogs you read.
-Deployment process (makefile/gulp)?
+`Deployment process (makefile/gulp)?`
 Access to BitBucket.
-How do you do code reviews. Atlassian?
+`How do you do code reviews. Atlassian?`
 `Do you write tests and how do you do QA testing?`
 `How do you pull data from 3rd party providers (is it custom per provider), do you scrape websites?`
 `Did you buy webstorm?`
@@ -16,4 +16,10 @@ How do you do code reviews. Atlassian?
 `How do you use different log levels (escpecially the lower ones)?`
 `How do you calculate the money spent on a project (is it based on man hours)?`
 `When do you commit, is it only when the programs works or compiles?`
-Do you use assertions?
+`Do you use assertions?`
+`Do you do stress testing and how?`
+
+Chef
+Puppet
+Ansible
+Salt

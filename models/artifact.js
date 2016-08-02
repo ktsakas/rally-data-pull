@@ -11,7 +11,7 @@ var config = require("../config/config"),
 	);
 
 var fs = require('fs'),
-	fieldConfig = JSON.parse(fs.readFileSync('config/artifact-fields.json', 'utf8'));
+	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8'));
 
 var artifactUtil = require('./utils.js');
 

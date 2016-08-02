@@ -1,7 +1,7 @@
 {
-	"UpdatedField": "string",
 	"Entered": "date",
 	"Exited": "date",
+	"DurationDays": "float",
 
 
 	"Story": {
@@ -27,6 +27,8 @@
 		"StartDate": "date",
 		"ReleaseDate": "date"
 	},
+
+	"ProjectHierarchy": "string",
 
 	"Project": {
 		"ID": "long",
@@ -77,8 +79,9 @@
 		"type": "string",
 		"null_value": []
 	},
+	"TotalPosts": "long",
 	"Owner": "long",
-	"Author": "long",
+	"Author": "string",
 
 	"PrevScheduleState": {
 		"type": "string",

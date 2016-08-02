@@ -8,6 +8,10 @@
 			"api": "_ValidTo",
 			"hook": "PRODUCED PROGRAMMATICALLY BY LOOKING AT THE PREVIOUS ENTERED FIELD"
 		},
+		"DurationDays": {
+			"api": "PRODUCED BY DIFFERENCE OF ENTRED FROM EXITED",
+			"hook": "PRODUCED BY DIFFERENCE OF ENTRED FROM EXITED"
+		},
 
 
 		"Story.ID": {
@@ -76,6 +80,10 @@
 		},
 
 
+		"ProjectHierarchy": {
+			"api": "CUSTOM FIELD PRODUCED FROM EXTRA QUERY",
+			"hook": "TODO"
+		},
 		"Project.ID": {
 			"api": "Project.ObjectID",
 			"hook": "TODO"
@@ -139,12 +147,16 @@
 			"api": "Tags",
 			"hook": "TODO"
 		},
+		"TotalPosts": {
+			"api": "CUSTOM PROPERTY PRODUCED FROM SEPARATE REQUEST",
+			"hook": "TODO"
+		},
 		"Owner": {
 			"api": "Owner",
 			"hook": "TODO"
 		},
 		"Author": {
-			"api": "_User",
+			"api": "CUSTOM FIELD PRODUCED FROM SAPARATE REQUEST",
 			"hook": "TODO"
 		},
 

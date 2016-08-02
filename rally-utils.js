@@ -9,7 +9,7 @@ var config = require('./config/config'),
 	Promise = require('bluebird'),
 	ESObject = require('./models/elastic-orm'),
 	Artifact = require('./models/artifact'),
-	Revisions = require('./models/revision').Revisions;
+	Revisions = require('./models/revisions');
 
 var artifactOrm = new ESObject(
 	config.esClient,
@@ -32,23 +32,36 @@ var totalArtifacts = null,
 	fetchProgress,
 	historyProgress;
 
+var async = require('async');
+
+var conc = 0;
+var fetchQueue = async.queue(function (start, callback) {
+	RallyUtils.pullArtifacts(start, PAGESIZE).then(callback);
+}, 200);
+
+var revisionQueue = async.queue(function (id, callback) {
+	RallyUtils.pullHistory(id, config.rally.workspaceID).then(callback);
+}, 50);
+
 class RallyUtils {
 	constructor () {
-		
+
 	}
 
 	static pullHistory (id, workspaceID) {
 		return RallyAPI
 			.getArtifactRevisions(id, workspaceID)
 			.then(function (res) {
-
+				historyProgress.tick();
+				
 				Revisions.fromSnapshots(res.Results).save().then(function (res) {
+
 					if (res.errors) {
 						l.error("Failed to insert snapshots.");
 						l.error("Sample error: ", res);
 
 					} else {
-						historyProgress.tick();
+						// historyProgress.tick();
 					}
 				});
 
@@ -57,7 +70,7 @@ class RallyUtils {
 			});
 	}
 
-	static pullHistoryGradually (artifactIDs, workspaceID, step) {
+	/*static pullHistoryGradually (artifactIDs, workspaceID, step) {
 		var p = Promise.resolve(),
 			from = 0;
 
@@ -78,7 +91,8 @@ class RallyUtils {
 		}
 
 		return p;
-	}
+	}*/
+
 
 	static pullArtifacts (start, pagesize) {
 		assert(pagesize <= 200);
@@ -86,14 +100,19 @@ class RallyUtils {
 		return RallyAPI
 			.getArtifacts(start, 200)
 			.catch((err) => {
-				l.debug(err);
-				return true;
+				// If the request fails try again
+				return RallyAPI.getArtifacts(start, 200);
+			})
+			.catch((err) => {
+				// Exit if we fail a second time
+				l.debug("Failed to pull artifacts twice. Exiting ...", err);
+				exit(1);
 			})
 			.then(function (response) {
 				var end = Math.min(start + PAGESIZE, totalArtifacts);
 
 				if (!response.Results) {
-					l.error("Failed to pull artifacts.");
+					l.debug("Should never reach here.");
 					return response;
 				}
 
@@ -125,6 +144,10 @@ class RallyUtils {
 					total: 100000
 				});
 
+				/*fetchProgress.on('end', function () {
+					console.log('\n');
+				});*/
+
 				historyProgress = multi.newBar('Fetching revisions [:bar] :percent', {
 					complete: '=',
 					incomplete: ' ',
@@ -141,14 +164,22 @@ class RallyUtils {
 					start < totalArtifacts;
 					start += PAGESIZE
 				) {
-					promises.push( RallyUtils.pullArtifacts(start, PAGESIZE) );
+					fetchQueue.push(start, function (err) {});
 				}
+				// fetchQueue.push(1, function (err) {});
 
-				Promise
-					.all(promises)
-					.then(() => {
-						RallyUtils.pullHistoryGradually(ObjectIDs, 6692415259, 500)//5339961604, 500)
-					});
+				var startFetchTime = new Date().getTime();
+				fetchQueue.drain = function () {
+					var endFetchTime = new Date().getTime();
+					// ObjectIDs
+					l.debug("took " + ((endFetchTime - startFetchTime)/1000) + " secs");
+					revisionQueue.push(ObjectIDs, function (err) {});
+				};
+
+				revisionQueue.drain = function () {
+					console.log("\n");
+					l.debug("took " + ((endFetchTime - startFetchTime)/1000) + " secs");
+				};
 			});
 	}
 }

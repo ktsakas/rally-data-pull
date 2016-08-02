@@ -27,11 +27,11 @@ module.exports = {
 	},
 
 	kibana: {
-		host: "http://83684862.ngrok.io"
+		host: "127.0.0.1:5601"//"http://83684862.ngrok.io"
 	},
 
 	elastic: {
-		host: "http://faf61a25.ngrok.io",
+		host: "127.0.0.1:9200",//"http://faf61a25.ngrok.io",
 		// host: "localhost:9200",
 		log: "error",
 
@@ -46,8 +46,8 @@ module.exports = {
 	},
 
 	esClient: new elastic.Client({
-		host: "http://faf61a25.ngrok.io",
-		// host: "localhost:9200",
+		// host: "http://faf61a25.ngrok.io",
+		host: "localhost:9200",
 		log: "error",
 	})
 };

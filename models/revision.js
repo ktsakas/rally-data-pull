@@ -122,8 +122,6 @@ class Revision {
 	}
 
 	save() {
-		console.log("saving model: ", this.model);
-
 		return stateOrm.setType(this._type).index(this.model);
 	}
 }

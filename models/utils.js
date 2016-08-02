@@ -32,8 +32,24 @@ class Utils {
 		return fieldsObj;
 	}
 
+	static parseCustomFields (fieldsObj) {
+		var Entered = fieldsObj.Entered,
+			Exited = fieldsObj.Exited;
+
+		if ( new Date(fieldsObj.Exited).getYear() == 8098 ) {
+			fieldsObj.Exited = null;
+			fieldsObj.DurationDays = null;
+		} else {
+			var durationMs =
+				new Date(fieldsObj.Exited).getTime() - new Date(fieldsObj.Entered).getTime();
+
+			fieldsObj.DurationDays = durationMs / 1000 / 60 / 60 / 24;
+		}
+	}
+
 	static removeUnused (fieldsObj) {
 		var usedFields = Object.keys(translation);
+		// l.debug("used fields: ", usedFields);
 
 		for (var fieldName in fieldsObj) {
 			if ( usedFields.indexOf(fieldName) == -1 )
@@ -56,7 +72,7 @@ class Utils {
 	}
 
 	// TODO: implement these to be in place
-	static flatten (obj) { return flatten(obj); }
+	static flatten (obj) { return flatten(obj, { safe: true }); }
 
 	static unflatten (obj) { return unflatten(obj); }
 
@@ -73,6 +89,10 @@ Utils.renameFields(testObj, 'api');
 
 Utils.removeUnused(testObj);
 // l.debug( "removed unused: ", testObj );
+
+Utils.parseCustomFields(testObj);
+// l.debug( "parsed custom: ", testObj );
+
 
 testObj = Utils.unflatten(testObj);
 // l.debug( "unflattened obj: ", testObj );

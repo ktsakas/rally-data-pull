@@ -73,9 +73,9 @@ class Revisions {
 		return mapping;
 	}
 
-	static createMapping (schema) {
+	static createMapping () {
 		return stateOrm.putMapping({
-				properties: Revisions.parseMapping(fieldConfig.schema)
+				properties: Revisions.parseMapping(schema)
 			})
 			.catch((err) => {
 				l.error("Failed to create mapping for revision.");
@@ -115,7 +115,10 @@ class Revisions {
 		// Parsing
 		var snapshotObj = parseUtils.flatten(snapshotObj);
 		parseUtils.renameFields(snapshotObj, 'api');
+		// l.debug("renamed: ", snapshotObj);
 		parseUtils.removeUnused(snapshotObj);
+		// l.debug("removed: ", snapshotObj);
+		parseUtils.parseCustomFields(snapshotObj);
 
 		var snapshotKeys = Object.keys(snapshotObj);
 
@@ -123,11 +126,21 @@ class Revisions {
 			var trackedField = fieldConfig.tracked[i];
 
 			if ( snapshotKeys.indexOf(trackedField) != -1 ) {
+				var randCustomers = ['Penn', 'Hilton', 'Serai'];
+				var randRegion = ['North America', 'South America', 'Europe', 'Asia', 'Australia']
+
+				// Use the empty object otherwise the operation 
+				// corrupts the nulledValues
 				snapshotObj = Object.assign(
+					{
+						Customer: randCustomers[Math.floor(Math.random() * 3)],
+						Region: randRegion[Math.floor(Math.random() * 5)],
+					},
 					// Default values to null
 					nulledValues,
 					parseUtils.unflatten(snapshotObj)
 				);
+
 
 				this.models.push( new Revision(snapshotObj, id) );
 				return;
@@ -138,9 +151,18 @@ class Revisions {
 	static fromSnapshots(snapshots) {
 		var states = new Revisions([]);
 
+		var countSpecific = 0;
 		snapshots.forEach((snapshot) => {
+			if (snapshot.ObjectID == 48385082410) {
+				countSpecific++;
+			}
+
 			states.appendSnapshotStates(snapshot);
 		});
+		
+		if (countSpecific > 0) {
+			console.log("Number of states for " + 48385082410 + " :" + countSpecific);
+		}
 
 		return states;
 	}

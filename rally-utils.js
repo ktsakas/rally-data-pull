@@ -53,7 +53,7 @@ class RallyUtils {
 			.getArtifactRevisions(id, workspaceID)
 			.then(function (res) {
 				historyProgress.tick();
-				
+
 				Revisions.fromSnapshots(res.Results).save().then(function (res) {
 
 					if (res.errors) {
@@ -106,7 +106,7 @@ class RallyUtils {
 			.catch((err) => {
 				// Exit if we fail a second time
 				l.debug("Failed to pull artifacts twice. Exiting ...", err);
-				exit(1);
+				process.exit(1);
 			})
 			.then(function (response) {
 				var end = Math.min(start + PAGESIZE, totalArtifacts);

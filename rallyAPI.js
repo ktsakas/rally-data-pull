@@ -30,7 +30,7 @@ function RequestRepeatOnError(req) {
 		})
 		.catch((err) => {
 			l.error("Connection timedout twice. Exiting...");
-			exit(1);
+			process.exit(1);
 		});
 }
 
@@ -158,7 +158,7 @@ class RallyAPI {
 			qs: {
 				find: '{"ObjectID":' + artifactID + '}',
 				fields: true,
-				hydrate: '["ScheduleState","_PreviousValues.ScheduleState"]'
+				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'
 			},
 			auth: {
 				user: config.rally.user,
@@ -210,6 +210,18 @@ class RallyAPI {
 						})
 					);
 				});
+
+				if (revision.Tags) {
+					revision.Tags.forEach((tag, j) => {
+						// console.log("Item idx: ", j);
+
+						proms.push(
+							RallyAPI.getTagName(tag).then((tagName) => {
+								res.Results[i].Tags[j] = tagName;
+							})
+						);
+					});
+				}
 
 				proms.push(
 					RallyAPI.getUserName(res.Results[i]._User).then((userName) => {

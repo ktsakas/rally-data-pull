@@ -177,6 +177,7 @@ class RallyUtils {
 				};
 
 				revisionQueue.drain = function () {
+					var endFetchTime = new Date().getTime();
 					console.log("\n");
 					l.debug("took " + ((endFetchTime - startFetchTime)/1000) + " secs");
 				};

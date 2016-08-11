@@ -82,7 +82,7 @@ class RallyAPI {
 		console.log(artifactID);
 	}
 
-	static getArtifactRevisions (artifactID, workspaceID) {
+	static getArtifactRevisions (artifact, workspaceID) {
 		var lookbackURL =
 			'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + config.rally.workspaceID + '/artifact/snapshot/query.js';
 
@@ -91,14 +91,14 @@ class RallyAPI {
 			method: 'GET',
 			uri: lookbackURL,
 			qs: {
-				find: '{"ObjectID":' + artifactID + '}',
+				find: '{"ObjectID":' + artifact.ObjectID + '}',
 				fields: true,
 				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'
 			}
 		}).then((res) => {
 			var proms = [],
 				p = RallyAPI
-				.getDiscussions(artifactID)
+				.getDiscussions(artifact.ObjectID)
 				.then((discussions) => {
 					var totalPosts = 0;
 
@@ -126,6 +126,7 @@ class RallyAPI {
 			}
 
 			res.Results.forEach((revision, i) => {
+				res.Results[i].FormattedID = artifact.FormattedID;
 
 				res.Results[i].ProjectHierarchy = [];
 				revision._ProjectHierarchy.forEach((projectAncestor, j) => {

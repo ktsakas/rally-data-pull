@@ -28,7 +28,7 @@ var RallyAPI = require("./rallyAPI");
 const PAGESIZE = 200;
 
 var totalArtifacts = null,
-	ObjectIDs = [],
+	artifacts = [],
 	fetchProgress,
 	historyProgress;
 
@@ -39,8 +39,8 @@ var fetchQueue = async.queue(function (start, callback) {
 	RallyUtils.pullArtifacts(start, PAGESIZE).then(callback);
 }, 200);
 
-var revisionQueue = async.queue(function (id, callback) {
-	RallyUtils.pullHistory(id, config.rally.workspaceID).then(callback);
+var revisionQueue = async.queue(function (artifact, callback) {
+	RallyUtils.pullHistory(artifact, config.rally.workspaceID).then(callback);
 }, 50);
 
 class RallyUtils {
@@ -48,9 +48,9 @@ class RallyUtils {
 
 	}
 
-	static pullHistory (id, workspaceID) {
+	static pullHistory (artifact, workspaceID) {
 		return RallyAPI
-			.getArtifactRevisions(id, workspaceID)
+			.getArtifactRevisions(artifact, workspaceID)
 			.then(function (res) {
 				historyProgress.tick();
 
@@ -69,30 +69,6 @@ class RallyUtils {
 				l.debug(err);
 			});
 	}
-
-	/*static pullHistoryGradually (artifactIDs, workspaceID, step) {
-		var p = Promise.resolve(),
-			from = 0;
-
-		for (var times= 0; times < artifactIDs.length; times += step) {
-			p = p
-				.then(() => {
-					// console.log("from " + from + " to " + (from + step) + "\n");
-
-					var someProms = artifactIDs
-						.slice(from, from + step)
-						.map((id) => {
-							return RallyUtils.pullHistory(id, workspaceID);
-						});
-					from += step;
-
-					return Promise.all(someProms);
-				});
-		}
-
-		return p;
-	}*/
-
 
 	static pullArtifacts (start, pagesize) {
 		assert(pagesize <= 200);
@@ -116,7 +92,10 @@ class RallyUtils {
 					return response;
 				}
 
-				response.Results.forEach((result) => ObjectIDs.push(result.ObjectID));
+				response.Results.forEach((result) => artifacts.push({
+					ObjectID: result.ObjectID,
+					FormattedID: result.FormattedID
+				}));
 
 				fetchProgress.tick(PAGESIZE);
 
@@ -171,9 +150,8 @@ class RallyUtils {
 				var startFetchTime = new Date().getTime();
 				fetchQueue.drain = function () {
 					var endFetchTime = new Date().getTime();
-					// ObjectIDs
 					l.debug("took " + ((endFetchTime - startFetchTime)/1000) + " secs");
-					revisionQueue.push(ObjectIDs, function (err) {});
+					revisionQueue.push(artifacts, function (err) {});
 				};
 
 				revisionQueue.drain = function () {

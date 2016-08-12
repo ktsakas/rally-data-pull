@@ -11,7 +11,7 @@ var cache = false;
 
 class WrappedRequestPromise {
 	constructor(req) {
-		if (cache) {
+		if (cache && req.method == 'GET') {
 			return this.cachedRequest(req);
 		} else {
 			return this.repeatOnErrorRequest(req);

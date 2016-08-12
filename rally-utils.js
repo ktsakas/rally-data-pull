@@ -11,17 +11,6 @@ var config = require('./config/config'),
 	Artifact = require('./models/artifact'),
 	Revisions = require('./models/revisions');
 
-var artifactOrm = new ESObject(
-	config.esClient,
-	config.elastic.index,
-	config.elastic.types.artifact
-);
-
-var stateOrm = new ESObject(
-	config.esClient,
-	config.elastic.index
-);
-
 var RallyAPI = require("./rallyAPI");
 
 

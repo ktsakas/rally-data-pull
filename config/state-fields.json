@@ -9,8 +9,8 @@
 			"hook": "PRODUCED PROGRAMMATICALLY BY LOOKING AT THE PREVIOUS ENTERED FIELD"
 		},
 		"DurationDays": {
-			"api": "PRODUCED BY DIFFERENCE OF ENTRED FROM EXITED",
-			"hook": "PRODUCED BY DIFFERENCE OF ENTRED FROM EXITED"
+			"api": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED",
+			"hook": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED"
 		},
 
 
@@ -36,21 +36,21 @@
 		},
 		"Story.HasParent": {
 			"api": "HasParent",
-			"hook": "TODO"
+			"hook": "state.HasParent.value"
 		},
 		"Story.Parent": {
 			"api": "CUSTOM FIELD PRODUCED FROM _ItemHierarchy",
-			"hook": "TODO"
+			"hook": "state.Parent.value"
 		},
 
 
 		"Iteration.Name": {
 			"api": "Iteration.Name",
-			"hook": "TODO"
+			"hook": "state.Iteration.value.name"
 		},
 		"Iteration.ID": {
 			"api": "Iteration.ObjectID",
-			"hook": "TODO"
+			"hook": "state.Iteration.value.id"
 		},
 		"Iteration.StartDate": {
 			"api": "Iteration.StartDate",
@@ -86,42 +86,46 @@
 		},
 		"Project.ID": {
 			"api": "Project.ObjectID",
-			"hook": "TODO"
+			"hook": "state.project.value.id"
 		},
 		"Project.Name": {
 			"api": "Project.Name",
-			"hook": "state.project.name"
+			"hook": "state.project.value.name"
 		},
 
 
 
 		"AccountServiceLevel": {
 			"api": "c_AccountServiceLevel",
-			"hook": "TODO"
+			"hook": "state.c_AccountServiceLevel.value"
+		},
+		"BIDNumber": {
+			"api": "c_BIDNumber",
+			"hook": "state.c_BIDNumber.value"
 		},
 		"ChannelName": {
 			"api": "c_ChannelName",
-			"hook": "TODO"
+			"hook": "state.c_ChannelName.value"
 		},
 		"ChannelRank": {
 			"api": "c_ChannelRank",
-			"hook": "TODO"
+			"hook": "state.c_ChannelRank.value"
 		},
 		"CreationDate": {
 			"api": "CreationDate",
-			"hook": "TODO"
+			"hook": "state.CreationDate.value"
 		},
 		"DataType": {
 			"api": "c_DataType",
-			"hook": "TODO"
+			"hook": "state.c_DataType.value"
 		},
 		"DirectChildrenCount": {
 			"api": "DirectChildrenCount",
-			"hook": "TODO"
+			"hook": "state.DirectChildrenCount.value"
 		},
 		"GMSComponent": {
 			"api": "c_GMSComponent",
-			"hook": "TODO"
+			"hook": "state.c_GMSComponent.value"
 		},
 		"L3KanbanStage": {
 			"api": "c_L3KanbanStage",
@@ -143,6 +147,10 @@
 			"api": "ScheduleState",
 			"hook": "state.ScheduleState.value.name"
 		},
+		"Status": {
+			"api": "CUSTOM FIELD",
+			"hook": "CUSTOM FIELD"
+		},
 		"Tags": {
 			"api": "Tags",
 			"hook": "TODO"
@@ -153,11 +161,11 @@
 		},
 		"Owner": {
 			"api": "Owner",
-			"hook": "TODO"
+			"hook": "state.Owner.value.name"
 		},
 		"Author": {
 			"api": "CUSTOM FIELD PRODUCED FROM SAPARATE REQUEST",
-			"hook": "TODO"
+			"hook": "transaction.user.email"
 		},
 
 

@@ -4,15 +4,11 @@ var express = require("express"),
 	app = express(),
 	bodyParser = require('body-parser'),
 	config = require('./config/config'),
-	l = config.logger,
-	esClient = config.esClient,
-	rallyUtils = require('./rally-utils');
+	l = config.logger;
 
 // Import models
-var Webhook = require('./models/webhook'),
-	Artifact = require('./models/artifact'),
-	State = require('./models/revision').State,
-	NestedRevisions = require('./models/nestedrevisions');
+var Webhook = require('./rally/hooks'),
+	Revisions = require('./models/revision');
 
 app.use(bodyParser.json())
    .use(bodyParser.urlencoded({ extended: false }));
@@ -29,36 +25,13 @@ app.post('/webhook', function (req, res) {
 		artifactID = hookObj.object_id;
 
 	// Save revision as separate type
-	var revision = Revision.fromHook(artifactID, hookObj);
-	revision.save().then((res) => {});
+	// var revision = Revision.fromHook(artifactID, hookObj);
+	// revision.save().then((res) => {});
 
-	// Save revision in artifact object
-	/*var nestedRevisions = NestedRevisions.fromHook(hookObj).getObj();
-	artifact.updateFields(nestedRevisions);*/
+	Webhook.invertKeyName(hookObj.state);
 
 	// Respond with the stored webhook
 	res.json(hookObj);
-});
-
-/**
- * Call this route to pull in initial data.
- * 
- * @param  {request}
- * @param  {response}
- */
-app.get('/pull', function (req, res) {
-	esClient
-		.ping()
-		.catch((err) => l.error("Unable to connect to elastic at " + config.elastic.host))
-		.then(() => l.info("Connected to elastic at: " + config.elastic.host))
-		.then(() => rallyUtils.pullAll())
-		/*.catch((err) => {
-			res.json(err.message);
-			throw err;
-		})
-		.then(() => {
-			res.json({ success: true });
-		});*/
 });
 
 /**

@@ -35,7 +35,10 @@
 		"Name": "string"
 	},
 
-
+	"Status": {
+		"type": "string",
+		"null_value": "N/A"
+	},
 	"AccountServiceLevel": {
 		"type": "string",
 		"null_value": "N/A"

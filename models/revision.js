@@ -26,7 +26,32 @@ class Revision {
 	constructor (stateObj, id) {
 		if (id) this._id = id;
 
+		Revision.computeStatus(stateObj);
+
 		this.model = stateObj;
+	}
+
+	static computeStatus (artifact) {
+		if (
+			artifact.Project.Name.indexOf("L3") != -1 &&
+			artifact.L3KanbanStage != "To Be Scheduled" &&
+			artifact.L3KanbanStage != "Verified" &&
+			artifact.L3KanbanStage != "Closed") {
+			artifact.Status = "Res L3";
+		} else if (
+			artifact.Project.Name.indexOf("L3") == -1 &&
+			artifact.L3KanbanStage != "Verified" &&
+			artifact.L3KanbanStage != "Closed"
+		) {
+			artifact.Status = "Product";
+		} else if (
+			artifact.L3KanbanStage == "Verified" ||
+			artifact.L3KanbanStage == "Closed"
+		) {
+			artifact.Status = "Resolved";
+		} else {
+			artifact.Status = null;
+		}
 	}
 
 	static createMapping() {

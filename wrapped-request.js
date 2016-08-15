@@ -22,13 +22,18 @@ class WrappedRequestPromise {
 		return rp(req)
 				// Try the request again on error
 				.catch((err) => {
-					return rp(req);
+					if (err.message.code === 'ETIMEDOUT') return rp(req);
+					else throw err;
 				})
 				// If you fail twice exit the program
 				.catch((err) => {
-					l.error(err);
-					l.error("Connection timedout twice. Exiting...");
-					process.exit(1);
+					if (err.message.code === 'ETIMEDOUT') {
+						l.error(err);
+						l.error("Connection timedout twice. Exiting...");
+						process.exit(1);
+					} else {
+						throw err;
+					}
 				});
 	}
 

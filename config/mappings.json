@@ -1,0 +1,180 @@
+{
+	"Entered": {
+		"api": "_ValidFrom",
+		"hook": "transaction.timestamp"
+	},
+	"Exited": {
+		"api": "_ValidTo",
+		"hook": "PRODUCED PROGRAMMATICALLY BY LOOKING AT THE PREVIOUS ENTERED FIELD"
+	},
+	"DurationDays": {
+		"api": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED",
+		"hook": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED"
+	},
+
+
+	"Story.ID": {
+		"api": "ObjectID",
+		"hook": "state.ObjectID.value"
+	},
+	"Story.UUID": {
+		"api": "_ObjectUUID",
+		"hook": "state.ObjectUUID.value"
+	},
+	"Story.FormattedID": {
+		"api": "FormattedID",
+		"hook": "state.FormattedID.value"
+	},
+	"Story.Name": {
+		"api": "Name",
+		"hook": "state.Name.value"
+	},
+	"Story.Type": {
+		"api": "c_StoryType",
+		"hook": "state.c_StoryType.value"
+	},
+	"Story.HasParent": {
+		"api": "HasParent",
+		"hook": "state.HasParent.value"
+	},
+	"Story.Parent": {
+		"api": "CUSTOM FIELD PRODUCED FROM _ItemHierarchy",
+		"hook": "state.Parent.value"
+	},
+
+
+	"Iteration.Name": {
+		"api": "Iteration.Name",
+		"hook": "state.Iteration.value.name"
+	},
+	"Iteration.ID": {
+		"api": "Iteration.ObjectID",
+		"hook": "state.Iteration.value.id"
+	},
+	"Iteration.StartDate": {
+		"api": "Iteration.StartDate",
+		"hook": "TODO"
+	},
+	"Iteration.EndDate": {
+		"api": "Iteration.EndDate",
+		"hook": "TODO"
+	},
+
+
+	"Release.Name": {
+		"api": "Release.Name",
+		"hook": "TODO"
+	},
+	"Release.ID": {
+		"api": "Release.ObjectID",
+		"hook": "TODO"
+	},
+	"Release.StartDate": {
+		"api": "Release.StartDate",
+		"hook": "TODO"
+	},
+	"Release.ReleaseDate": {
+		"api": "Release.ReleaseDate",
+		"hook": "TODO"
+	},
+
+
+	"ProjectHierarchy": {
+		"api": "CUSTOM FIELD PRODUCED FROM EXTRA QUERY",
+		"hook": "TODO"
+	},
+	"Project.ID": {
+		"api": "Project.ObjectID",
+		"hook": "state.project.value.id"
+	},
+	"Project.Name": {
+		"api": "Project.Name",
+		"hook": "state.project.value.name"
+	},
+
+
+
+	"AccountServiceLevel": {
+		"api": "c_AccountServiceLevel",
+		"hook": "state.c_AccountServiceLevel.value"
+	},
+	"BIDNumber": {
+		"api": "c_BIDNumber",
+		"hook": "state.c_BIDNumber.value"
+	},
+	"ChannelName": {
+		"api": "c_ChannelName",
+		"hook": "state.c_ChannelName.value"
+	},
+	"ChannelRank": {
+		"api": "c_ChannelRank",
+		"hook": "state.c_ChannelRank.value"
+	},
+	"CreationDate": {
+		"api": "CreationDate",
+		"hook": "state.CreationDate.value"
+	},
+	"DataType": {
+		"api": "c_DataType",
+		"hook": "state.c_DataType.value"
+	},
+	"DirectChildrenCount": {
+		"api": "DirectChildrenCount",
+		"hook": "state.DirectChildrenCount.value"
+	},
+	"GMSComponent": {
+		"api": "c_GMSComponent",
+		"hook": "state.c_GMSComponent.value"
+	},
+	"L3KanbanStage": {
+		"api": "c_L3KanbanStage",
+		"hook": "state.c_L3KanbanStage.value"
+	},
+	"LastUpdateDate": {
+		"api": "LastUpdateDate",
+		"hook": "state.LastUpdateDate.value"
+	},
+	"SalesforceCase": {
+		"api": "c_SalesforceCase",
+		"hook": "state.c_SalesforceCase.value"
+	},
+	"SalesforcePriority": {
+		"api": "c_SalesforcePriority",
+		"hook": "state.c_SalesforcePriority.value"
+	},
+	"ScheduleState": {
+		"api": "ScheduleState",
+		"hook": "state.ScheduleState.value.name"
+	},
+	"Status": {
+		"api": "CUSTOM FIELD",
+		"hook": "CUSTOM FIELD"
+	},
+	"Tags": {
+		"api": "Tags",
+		"hook": "TODO"
+	},
+	"TotalPosts": {
+		"api": "CUSTOM PROPERTY PRODUCED FROM SEPARATE REQUEST",
+		"hook": "TODO"
+	},
+	"Owner": {
+		"api": "Owner",
+		"hook": "state.Owner.value.name"
+	},
+	"Author": {
+		"api": "CUSTOM FIELD PRODUCED FROM SAPARATE REQUEST",
+		"hook": "transaction.user.email"
+	},
+
+
+
+	"PrevScheduleState": {
+		"api": "_PreviousValues.ScheduleState",
+		"hook": "changes.ScheduleState.value.name"
+	},
+	"PrevL3KanbanStage": {
+		"api": "_PreviousValues.c_L3KanbanStage",
+		"hook": "changes.c_L3KanbanStage.value"
+	}
+}

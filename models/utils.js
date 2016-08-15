@@ -1,7 +1,7 @@
 var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
-	translation = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8')).translation,
+	translation = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),
 	testObj = JSON.parse(fs.readFileSync('trash/test-obj.json', 'utf8'));
 
 var flatten = require('flat'),
@@ -57,18 +57,6 @@ class Utils {
 		}
 
 		return fieldsObj;
-	}
-
-	static getKeptFields (fieldsObj) {
-		var keepFields = Object.keys(translation),
-			keptFields = {};
-
-		for (var fieldName in fieldsObj) {
-			if ( keepFields.indexOf(fieldName) != -1 )
-				keptFields[fieldName] = fieldsObj[fieldName];
-		}
-
-		return keptFields;
 	}
 
 	// TODO: implement these to be in place

@@ -11,7 +11,8 @@ var config = require("../config/config"),
 	);
 
 var fs = require('fs'),
-	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8'));
+	mappings = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),
+	tracked = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8'));
 
 var artifactUtil = require('./utils.js');
 
@@ -24,24 +25,24 @@ class Artifact {
 	static createMapping() {
 		var mapping = {};
 
-		/*for (var fieldName in fieldConfig.keep) {
+		/*for (var fieldName in mappings) {
 			mapping[fieldName] = {
-				type: fieldConfig.keep[fieldName]
+				type: mappings[fieldName]
 			};
 		}*/
 
 		// Mapping for tracked fields
-		fieldConfig.track.forEach((fieldName) => {
+		tracked.forEach((fieldName) => {
 			mapping[fieldName] = {
 				properties: {
-					Value: { type: fieldConfig.keep[fieldName] },
+					Value: { type: mappings[fieldName] },
 
 					States: {
 						type: "nested",
 
 						properties: {
-							Value: { type: fieldConfig.keep[fieldName] },
-							OldValue: { type: fieldConfig.keep[fieldName] },
+							Value: { type: mappings[fieldName] },
+							OldValue: { type: mappings[fieldName] },
 							Entered: { type: "date" },
 							Exited: { type: "date" },
 							Duration: { type: "integer" },
@@ -78,7 +79,7 @@ class Artifact {
 
 		// Initialize all fields that we are tracking
 		// if they are available in the artifact
-		fieldConfig.track.forEach((fieldName) => {
+		tracked.forEach((fieldName) => {
 
 			if (fields[fieldName]) {
 				fields[fieldName] = { Value: fields[fieldName] };
@@ -124,7 +125,7 @@ class Artifact {
 	updateFields (changes) {
 		var fields = this.model || {};
 
-		fieldConfig.track.forEach((fieldName) => {
+		tracked.forEach((fieldName) => {
 			if ( !changes[fieldName] ) return;
 
 			fields[fieldName].Value = changes[fieldName].value;

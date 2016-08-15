@@ -43,7 +43,7 @@ class ElasticOrm {
 				_id: item._id
 			}});
 
-			batch.push(item.getObj());
+			batch.push(item);
 		});
 
 		return batch;

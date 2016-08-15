@@ -11,7 +11,7 @@ var config = require('./config/config'),
 	Artifact = require('./models/artifact'),
 	Revisions = require('./models/revisions');
 
-var RallyAPI = require("./rallyAPI");
+var RallyAPI = require("./rally/api-calls");
 
 
 const PAGESIZE = 200;
@@ -40,18 +40,22 @@ class RallyUtils {
 	static pullHistory (artifact, workspaceID) {
 		return RallyAPI
 			.getArtifactRevisions(artifact, workspaceID)
-			.then(function (res) {
+			.then(function (snapshots) {
+				// l.debug(snapshots);
+
+				return;
+
 				historyProgress.tick();
 
-				Revisions.fromSnapshots(res.Results).save().then(function (res) {
+				Revisions.fromSnapshots(snapshots).save().then(function (snapshots) {
 
-					if (res.errors) {
+					/*if (res.errors) {
 						l.error("Failed to insert snapshots.");
-						l.error("Sample error: ", res);
+						l.error("Sample error: ", snapshots);
 
 					} else {
 						// historyProgress.tick();
-					}
+					}*/
 				});
 
 			}).catch(function (err) {
@@ -126,15 +130,15 @@ class RallyUtils {
 				fetchProgress.total = totalArtifacts;
 				historyProgress.total = totalArtifacts;
 
-				var promises = [];
+				/*var promises = [];
 				for (
 					var start = 1;
 					start < totalArtifacts;
 					start += PAGESIZE
 				) {
 					fetchQueue.push(start, function (err) {});
-				}
-				// fetchQueue.push(1, function (err) {});
+				}*/
+				fetchQueue.push(1, function (err) {});
 
 				var startFetchTime = new Date().getTime();
 				fetchQueue.drain = function () {

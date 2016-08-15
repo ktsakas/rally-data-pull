@@ -1,7 +1,7 @@
-var config = require('./config/config'),
+var config = require('../config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
-	rp = require('./wrapped-request').defaults({
+	rp = require('../wrapped-request').defaults({
 		timeout: 10000,
 		auth: {
 			user: config.rally.user,
@@ -78,10 +78,6 @@ class RallyAPI {
 			.then((res) => res.QueryResult ? res.QueryResult.Results : []);
 	}
 
-	static addDiscussionCountToRevisions (artifactID) {
-		console.log(artifactID);
-	}
-
 	static getArtifactRevisions (artifact, workspaceID) {
 		var lookbackURL =
 			'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + config.rally.workspaceID + '/artifact/snapshot/query.js';
@@ -95,7 +91,18 @@ class RallyAPI {
 				fields: true,
 				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'
 			}
-		}).then((res) => {
+		});/*.then((res) => {
+			if (!res.Results[0]) {
+				l.debug(lookbackURL);
+				l.debug(artifact.ObjectID);
+				l.debug("results: ", res);
+				res.Results = [];
+			}
+
+			return res;
+		});*/ /*.then((res) => {
+			
+
 			var proms = [],
 				p = RallyAPI
 				.getDiscussions(artifact.ObjectID)
@@ -159,7 +166,7 @@ class RallyAPI {
 			});
 
 			return Promise.all(proms).then(() => { return res; });
-		});
+		});*/
 	}
 
 	static getArtifacts (start, pagesize) {
@@ -202,5 +209,7 @@ class RallyAPI {
 		return new rp(options).then((res) => res.QueryResult.TotalResultCount);
 	}
 }
+
+l.debug("get rally: ", RallyAPI.getDiscussions);
 
 module.exports = RallyAPI;

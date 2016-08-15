@@ -90,9 +90,9 @@ class RallyHooks {
 							url: 'https://rally1.rallydev.com/notifications/api/v2/webhook',
 							body: {
 								AppName: "Customer Support Dashboard",
-								AppUrl: "http://mockbin.org/bin/8f4223f9-c04f-4ddd-9575-556d584a7a36",
+								AppUrl: "http://ad5e6996.ngrok.io",
 								Name: project.Name + " Hook",
-								TargetUrl: "http://mockbin.org/bin/8f4223f9-c04f-4ddd-9575-556d584a7a36",
+								TargetUrl: "http://ad5e6996.ngrok.io",
 								Expressions: [{
 									Value: project.UUID,
 									Operator: "project"
@@ -119,9 +119,12 @@ class RallyHooks {
 			return new rp({
 				method: 'DELETE',
 				url: 'https://rally1.rallydev.com/notifications/api/v2/webhook/' + hookID
+			}).catch((err) => {
+				if (err.Errors[0].message == "Webhook not found") return;
+				else throw err;
 			});
 		// Remove webhook ids from file
-		})).then((res) => {
+		})).then((_) => {
 			fs.writeFileSync(path.join(__dirname, './hook-ids.json'), '[]', 'utf8');
 		});
 	}
@@ -137,6 +140,6 @@ rallyHooks
 	.remove()
 	.then(() => {
 		rallyHooks.create();
-	});
-*/
+	});*/
+
 module.exports = RallyHooks;

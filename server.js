@@ -4,7 +4,8 @@ var express = require("express"),
 	app = express(),
 	bodyParser = require('body-parser'),
 	config = require('./config/config'),
-	l = config.logger;
+	l = config.logger,
+	parseUtils = require('./models/utils');
 
 // Import models
 var Webhook = require('./rally/hooks'),
@@ -29,9 +30,19 @@ app.post('/webhook', function (req, res) {
 	// revision.save().then((res) => {});
 
 	Webhook.invertKeyName(hookObj.state);
+	Webhook.invertKeyName(hookObj.changes);
+
+	if (hookObj.action == "created" || )
+
+	res.json(hookObj);
+
+	var snapshotObj = parseUtils.flatten(hookObj);
+	parseUtils.renameFields(snapshotObj, 'hook');
+	parseUtils.removeUnused(snapshotObj);
+	hookObj = parseUtils.unflatten(snapshotObj);
 
 	// Respond with the stored webhook
-	res.json(hookObj);
+	// res.json(hookObj);
 });
 
 /**

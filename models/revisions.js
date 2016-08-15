@@ -9,7 +9,8 @@ var config = require("../config/config"),
 	parseUtils = require('./utils.js');
 
 var fs = require('fs'),
-	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8')),
+	mappings = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),
+	tracked = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8')),
 	schema = JSON.parse(fs.readFileSync('config/schema.json', 'utf8'));
 
 const assert = require('assert');
@@ -23,8 +24,8 @@ for (var field in schema) {
 var Revision = require('./revision');
 
 class Revisions {
-	constructor (statesArr) {
-		this.models = statesArr;
+	constructor (revisions) {
+		this.models = revisions;
 	}
 
 	createTypes() {
@@ -83,88 +84,13 @@ class Revisions {
 			});
 	}
 
-	appendArtifactStates(artifactObj) {
-		var fields = stateUtils.removeUnusedFields(artifactObj);
-
-		fieldConfig.track.forEach((fieldName) => {
-			if (fields[fieldName]) {
-				var state = Object.assign({
-					Entered: artifactObj.LastUpdateDate,
-					Exited: null,
-				}, fields);
-
-				state["Prev" + fieldName] = fields[fieldName];
-
-				this.models.push( new Revision(state) );
-			}
-		});
-	}
-
-	static fromArtifacts(artifacts) {
-		var states = new Revisions([]);
-
-		artifacts.forEach((artifact) => {
-			states.appendArtifactStates(artifact);
-		});
-
-		return states;
-	}
-
-	appendSnapshotStates(snapshotObj) {
-		var id = snapshotObj._id;
-		// Parsing
-		var snapshotObj = parseUtils.flatten(snapshotObj);
-		parseUtils.renameFields(snapshotObj, 'api');
-		// l.debug("renamed: ", snapshotObj);
-		parseUtils.removeUnused(snapshotObj);
-		// l.debug("removed: ", snapshotObj);
-		parseUtils.parseCustomFields(snapshotObj);
-
-		var snapshotKeys = Object.keys(snapshotObj);
-
-		for (var i= 0; i < fieldConfig.tracked.length; i++ ) {
-			var trackedField = fieldConfig.tracked[i];
-
-			if ( snapshotKeys.indexOf(trackedField) != -1 ) {
-				var randCustomers = ['Penn', 'Hilton', 'Serai'];
-				var randRegion = ['North America', 'South America', 'Europe', 'Asia', 'Australia']
-
-				// Use the empty object otherwise the operation 
-				// corrupts the nulledValues
-				snapshotObj = Object.assign(
-					{
-						Customer: randCustomers[Math.floor(Math.random() * 3)],
-						Region: randRegion[Math.floor(Math.random() * 5)],
-					},
-					// Default values to null
-					nulledValues,
-					parseUtils.unflatten(snapshotObj)
-				);
-
-
-				this.models.push( new Revision(snapshotObj, id) );
-				return;
-			}
-		}
-	}
-
-	static fromSnapshots(snapshots) {
-		var states = new Revisions([]);
-
-		var countSpecific = 0;
-		snapshots.forEach((snapshot) => {
-			if (snapshot.ObjectID == 48385082410) {
-				countSpecific++;
-			}
-
-			states.appendSnapshotStates(snapshot);
-		});
-		
-		if (countSpecific > 0) {
-			console.log("Number of states for " + 48385082410 + " :" + countSpecific);
+	hasTrackedFields(snapshotObj) {
+		var fields = Object.keys(snapshotObj);
+		for (var i= 0; i < tracked.length; i++) {
+			if ( fields.indexOf(tracked[i]) != -1 ) return true;
 		}
 
-		return states;
+		return false;
 	}
 
 	save() {
@@ -172,7 +98,7 @@ class Revisions {
 	}
 }
 
-// l.debug(Revisions.parseMapping(fieldConfig.schema));
+// l.debug(Revisions.parseMapping(mappings.schema));
 // l.debug(Revisions.createMapping());
 
 module.exports = Revisions;

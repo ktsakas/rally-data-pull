@@ -8,10 +8,11 @@ var config = require("../config/config"),
 		config.elastic.index,
 		config.elastic.types.revision
 	),
-	parseUtils = require('./utils.js');
+	parseUtils = require('./utils');
 
 var fs = require('fs'),
-	fieldConfig = JSON.parse(fs.readFileSync('config/state-fields.json', 'utf8')),
+	mappings = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),
+	mappings = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8')),
 	schema = JSON.parse(fs.readFileSync('config/schema.json', 'utf8'));
 
 const assert = require('assert');
@@ -57,12 +58,12 @@ class Revision {
 	static createMapping() {
 		var mapping = {};
 
-		for (var fieldName in fieldConfig.keep) {
+		for (var fieldName in mappings) {
 			mapping[fieldName] = {
-				type: fieldConfig.keep[fieldName]
+				type: mappings[fieldName]
 			};
 
-			if (fieldConfig.keep[fieldName] == "string") {
+			if (mappings[fieldName] == "string") {
 				mapping[fieldName].index = "not_analyzed";
 			}
 		}
@@ -88,7 +89,7 @@ class Revision {
 	}
 
 	static hookGetArtifact(hookObj) {
-		var fields = Object.keys(fieldConfig.keep),
+		var fields = Object.keys(mappings),
 			artifactObj = {};
 
 		// console.log("fields: ", fields);
@@ -115,7 +116,7 @@ class Revision {
 			var change = hookObj.changes[id];
 
 			// Drop untracked fields
-			if ( fieldConfig.track.indexOf(change.name) == -1 ) continue;
+			if ( tracked.indexOf(change.name) == -1 ) continue;
 
 			var stateObj = Object.assign({
 					DisplayName: change.display_name,

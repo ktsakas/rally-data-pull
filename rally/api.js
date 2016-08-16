@@ -91,82 +91,7 @@ class RallyAPI {
 				fields: true,
 				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'
 			}
-		});/*.then((res) => {
-			if (!res.Results[0]) {
-				l.debug(lookbackURL);
-				l.debug(artifact.ObjectID);
-				l.debug("results: ", res);
-				res.Results = [];
-			}
-
-			return res;
-		});*/ /*.then((res) => {
-			
-
-			var proms = [],
-				p = RallyAPI
-				.getDiscussions(artifact.ObjectID)
-				.then((discussions) => {
-					var totalPosts = 0;
-
-					res.Results.forEach((revision, i) => {
-						var exitDate = new Date(revision._ValidTo);
-
-						discussions.forEach((discussion) => {
-							var postDate = new Date(discussion.CreationDate);
-
-							if (postDate.getTime() <= exitDate.getTime()) {
-								totalPosts++;
-							}
-						});
-						
-						res.Results[i].TotalPosts = totalPosts;
-					});
-				});
-
-			proms.push(p);
-
-			// TODO: eventually remove this or replace with assert
-			if (!res.Results) {
-				l.error(res);
-				process.exit(1);
-			}
-
-			res.Results.forEach((revision, i) => {
-				res.Results[i].FormattedID = artifact.FormattedID;
-
-				res.Results[i].ProjectHierarchy = [];
-				revision._ProjectHierarchy.forEach((projectAncestor, j) => {
-					// console.log("Item idx: ", j);
-
-					proms.push(
-						RallyAPI.getProjectName(projectAncestor).then((projectName) => {
-							res.Results[i].ProjectHierarchy[j] = projectName;
-						})
-					);
-				});
-
-				if (revision.Tags) {
-					revision.Tags.forEach((tag, j) => {
-						// console.log("Item idx: ", j);
-
-						proms.push(
-							RallyAPI.getTagName(tag).then((tagName) => {
-								res.Results[i].Tags[j] = tagName;
-							})
-						);
-					});
-				}
-
-				proms.push(
-					RallyAPI.getUserName(res.Results[i]._User).then((userName) => {
-						res.Results[i].Author = userName;
-					})
-				);
-			});
-
-			return Promise.all(proms).then(() => { return res; });
-		});*/
+		});
 	}
 
 	static getArtifacts (start, pagesize) {
@@ -209,7 +134,5 @@ class RallyAPI {
 		return new rp(options).then((res) => res.QueryResult.TotalResultCount);
 	}
 }
-
-l.debug("get rally: ", RallyAPI.getDiscussions);
 
 module.exports = RallyAPI;

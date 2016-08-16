@@ -107,12 +107,12 @@ class RallyHooks {
 				});
 
 				// Store hook ids in file
-				fs.writeFileSync(path.join(__dirname, './hook-ids.json'), JSON.stringify(hookIDs), 'utf8');
+				fs.writeFileSync(path.join(__dirname, './webhook-ids.json'), JSON.stringify(hookIDs), 'utf8');
 			});
 	}
 
 	remove () {
-		var hookIDs = JSON.parse( fs.readFileSync(path.join(__dirname, './hook-ids.json'), 'utf8') );
+		var hookIDs = JSON.parse( fs.readFileSync(path.join(__dirname, './webhook-ids.json'), 'utf8') );
 
 		// Send delete requests for all webhooks
 		return Promise.all(hookIDs.map((hookID) => {
@@ -125,7 +125,7 @@ class RallyHooks {
 			});
 		// Remove webhook ids from file
 		})).then((_) => {
-			fs.writeFileSync(path.join(__dirname, './hook-ids.json'), '[]', 'utf8');
+			fs.writeFileSync(path.join(__dirname, './webhook-ids.json'), '[]', 'utf8');
 		});
 	}
 

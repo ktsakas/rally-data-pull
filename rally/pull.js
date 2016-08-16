@@ -8,11 +8,10 @@ var config = require('../config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
 	ESObject = require('../models/elastic-orm'),
-	Artifact = require('../models/artifact'),
 	Revisions = require('../models/revisions');
 
-var RallyAPI = require("./api-calls"),
-	APIFormatter = require('./api-formatter');
+var RallyAPI = require("./api"),
+	SnapshotsFormatter = require('../formatters/snapshots');
 
 
 const PAGESIZE = 200;
@@ -33,32 +32,18 @@ var revisionQueue = async.queue(function (artifact, callback) {
 	RallyUtils.pullHistory(artifact, config.rally.workspaceID).then(callback);
 }, 50);
 
-var totalEmptyResults = 0;
-
-class RallyUtils {
+class RallyPull {
 	static pullHistory (artifact, workspaceID) {
 		return RallyAPI
 			.getArtifactRevisions(artifact, workspaceID)
 			.then((res) => {
-				if (res.TotalResultCount == 0) {
-					historyProgress.tick();
-					totalEmptyResults++;
-					return;
-				}
+				historyProgress.tick();
 
-				return new APIFormatter(res.Results).formatArtifactHistory().then((snapshots) => {
-					historyProgress.tick();
-
-					return new Revisions(snapshots).save().then(function (saved) {
-						/*if (res.errors) {
-							l.error("Failed to insert snapshots.");
-							l.error("Sample error: ", snapshots);
-
-						} else {
-							// historyProgress.tick();
-						}*/
+				return new SnapshotsFormatter(res.Results)
+					.formatSnapshots()
+					.then((snapshots) => {
+						return new Revisions(snapshots).save();
 					});
-				});
 			}).catch((err) => {
 				l.debug(err);
 			});
@@ -151,13 +136,12 @@ class RallyUtils {
 				revisionQueue.drain = function () {
 					var endFetchTime = new Date().getTime();
 					console.log("\n");
-					l.debug("Total empty results: ", totalEmptyResults);
 					l.debug("took " + ((endFetchTime - startFetchTime)/1000) + " secs");
 				};
 			});
 	}
 }
 
-RallyUtils.pullAll();
+RallyPull.pullAll();
 
-module.exports = RallyUtils;
+module.exports = RallyPull;

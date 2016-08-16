@@ -42,7 +42,7 @@ class Revisions {
 		return stateOrm.deleteIndex();
 	}
 
-	static parseMapping (schema) {
+	static parseSchema (schema) {
 		assert(schema);
 
 		var mapping = {};
@@ -55,7 +55,7 @@ class Revisions {
 				if ( !field.type || field.type == "object" ) {
 					mapping[fieldName] = {
 						type: "object",
-						properties: Revisions.parseMapping(field)
+						properties: Revisions.parseSchema(field)
 					};
 				} else {					
 					mapping[fieldName] = field;
@@ -76,7 +76,7 @@ class Revisions {
 
 	static createMapping () {
 		return stateOrm.putMapping({
-				properties: Revisions.parseMapping(schema)
+				properties: Revisions.parseSchema(schema)
 			})
 			.catch((err) => {
 				l.error("Failed to create mapping for revision.");
@@ -84,17 +84,12 @@ class Revisions {
 			});
 	}
 
-	hasTrackedFields(snapshotObj) {
-		var fields = Object.keys(snapshotObj);
-		for (var i= 0; i < tracked.length; i++) {
-			if ( fields.indexOf(tracked[i]) != -1 ) return true;
-		}
-
-		return false;
-	}
-
 	save() {
-		return stateOrm.bulkIndex(this.models);
+		this.models.forEach((revision) => {
+			var id = revision._id;
+			delete revision._id;
+			new Revision(revision, id).save();
+		});
 	}
 }
 

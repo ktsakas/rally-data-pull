@@ -26,8 +26,8 @@ class FormatBase {
 			.removeUnused()
 			.nullMissingFields()
 			.unflatten()
-			.addDummyData();
-
+			.addDummyData()
+			.addStatus();
 
 		var proms = [];
 		proms.push( this.addProjectHierarchy() );
@@ -80,6 +80,31 @@ class FormatBase {
 			});
 	}
 
+	addStatus () {
+		if (
+			this.obj.Project.Name.indexOf("L3") != -1 &&
+			this.obj.L3KanbanStage != "To Be Scheduled" &&
+			this.obj.L3KanbanStage != "Verified" &&
+			this.obj.L3KanbanStage != "Closed") {
+			this.obj.Status = "Res L3";
+		} else if (
+			this.obj.Project.Name.indexOf("L3") == -1 &&
+			this.obj.L3KanbanStage != "Verified" &&
+			this.obj.L3KanbanStage != "Closed"
+		) {
+			this.obj.Status = "Product";
+		} else if (
+			this.obj.L3KanbanStage == "Verified" ||
+			this.obj.L3KanbanStage == "Closed"
+		) {
+			this.obj.Status = "Resolved";
+		} else {
+			this.obj.Status = null;
+		}
+
+		return this;
+	}
+
 	addDummyData () {
 		var randCustomers = ['Penn', 'Hilton', 'Serai', 'Gondola', 'Transick', 'Beddom'];
 		var randRegion = ['North America', 'South America', 'Europe', 'Asia', 'Australia'];
@@ -116,6 +141,7 @@ class FormatBase {
 		return this;
 	}
 
+	// This is overriden by child classes
 	parseDates () {
 		var Entered = this.obj.Entered,
 			Exited = this.obj.Exited;

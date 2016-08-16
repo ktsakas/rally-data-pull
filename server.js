@@ -21,13 +21,13 @@ app.use(bodyParser.json())
  * @param  {response}
  */
 app.post('/webhook', function (req, res) {
-	var hookObj = req.body.message;
 
-
-	var ret = new WebhookFormatter(hookObj).formatWebhook().then((hook) => {
-		// Respond with the stored webhook
-		res.json(hook);
-	});
+	new WebhookFormatter(req.body.message)
+		.formatWebhook()
+		.then((hook) => {
+			// Respond with the stored webhook
+			res.json(hook);
+		});
 
 });
 

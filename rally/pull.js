@@ -1,14 +1,15 @@
 "use strict";
 
-const assert = require('assert');
 var Multiprogress = require("multi-progress");
 var multi = new Multiprogress(process.stderr);
 
-var config = require('../config/config'),
+var assert = require('assert'),
+	config = require('../config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
 	ESObject = require('../models/elastic-orm'),
-	Revisions = require('../models/revisions');
+	Revisions = require('../models/revisions'),
+	async = require('async');
 
 var RallyAPI = require("./api"),
 	SnapshotsFormatter = require('../formatters/snapshots');
@@ -21,32 +22,27 @@ var totalArtifacts = null,
 	fetchProgress,
 	historyProgress;
 
-var async = require('async');
-
-var conc = 0;
 var fetchQueue = async.queue(function (start, callback) {
-	RallyUtils.pullArtifacts(start, PAGESIZE).then(callback);
+	RallyPull.pullArtifacts(start, PAGESIZE).then(callback);
 }, 200);
 
 var revisionQueue = async.queue(function (artifact, callback) {
-	RallyUtils.pullHistory(artifact, config.rally.workspaceID).then(callback);
+	RallyPull.pullHistory(artifact, config.rally.workspaceID).then(callback);
 }, 50);
 
 class RallyPull {
-	static pullHistory (artifact, workspaceID) {
+	static pullHistory (artifact, workspaceID) {		
 		return RallyAPI
-			.getArtifactRevisions(artifact, workspaceID)
+			.getArtifactRevisions(artifact.ObjectID, workspaceID)
 			.then((res) => {
-				historyProgress.tick();
-
 				return new SnapshotsFormatter(res.Results)
+					.addFormattedID(artifact.FormattedID)
 					.formatSnapshots()
 					.then((snapshots) => {
 						return new Revisions(snapshots).save();
 					});
-			}).catch((err) => {
-				l.debug(err);
-			});
+			})
+			.then(historyProgress.tick);
 	}
 
 	static pullArtifacts (start, pagesize) {
@@ -54,15 +50,6 @@ class RallyPull {
 
 		return RallyAPI
 			.getArtifacts(start, 200)
-			.catch((err) => {
-				// If the request fails try again
-				return RallyAPI.getArtifacts(start, 200);
-			})
-			.catch((err) => {
-				// Exit if we fail a second time
-				l.debug("Failed to pull artifacts twice. Exiting ...", err);
-				process.exit(1);
-			})
 			.then((response) => {
 				var end = Math.min(start + PAGESIZE, totalArtifacts);
 
@@ -95,7 +82,7 @@ class RallyPull {
 
 				l.info("Total number of artifacts: " + totalArtifacts);
 
-				fetchProgress = multi.newBar('Fetching artifacts [:bar] :percent', {
+				fetchProgress = multi.newBar('Pulling artifacts [:bar] :percent', {
 					complete: '=',
 					incomplete: ' ',
 					width: 40,
@@ -106,7 +93,7 @@ class RallyPull {
 					console.log('\n');
 				});*/
 
-				historyProgress = multi.newBar('Fetching revisions [:bar] :percent', {
+				historyProgress = multi.newBar('Pulling history [:bar] :percent', {
 					complete: '=',
 					incomplete: ' ',
 					width: 40,
@@ -129,14 +116,14 @@ class RallyPull {
 				var startFetchTime = new Date().getTime();
 				fetchQueue.drain = function () {
 					var endFetchTime = new Date().getTime();
-					l.debug("took " + ((endFetchTime - startFetchTime)/1000) + " secs");
+					console.log("\ntook " + ((endFetchTime - startFetchTime)/1000) + " secs");
+
 					revisionQueue.push(artifacts, function (err) {});
 				};
 
 				revisionQueue.drain = function () {
 					var endFetchTime = new Date().getTime();
-					console.log("\n");
-					l.debug("took " + ((endFetchTime - startFetchTime)/1000) + " secs");
+					console.log("\ntook " + ((endFetchTime - startFetchTime)/1000) + " secs");
 				};
 			});
 	}

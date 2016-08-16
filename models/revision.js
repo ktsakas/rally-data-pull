@@ -7,8 +7,7 @@ var config = require("../config/config"),
 		config.esClient,
 		config.elastic.index,
 		config.elastic.types.revision
-	),
-	parseUtils = require('./utils');
+	);
 
 var fs = require('fs'),
 	mappings = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),

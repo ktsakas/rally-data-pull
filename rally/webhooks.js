@@ -13,23 +13,17 @@ var config = require("../config/config"),
 		},
 		cache: true,
 		json: true
-	});
+	}),
+	webhookIdsFilePath = path.join(__dirname, './webhook-ids.json'),
+	RallyAPI = require('./api');
 
-class RallyHooks {
+class RallyWebhooks {
 	constructor(projectID) {
 		this.projectID = projectID;
 	}
 
-	static invertKeyName(state) {
-		for (var key in state) {
-			console.log(key, " -- ", state[key]);
+	runServer() {
 
-			state[ state[key].name ] = state[key];
-			
-			delete state[key];
-		}
-
-		return state;
 	}
 
 	getProjectChildren (projectID) {
@@ -61,7 +55,7 @@ class RallyHooks {
 				// Append the child's descendants
 				var proms = children.map((child) => {
 					return this
-						.getProjectDescendants(child.ID)
+						.getProjectDescendants(child.ObjectID)
 						.then((childDescendants) => {
 							descendants = descendants.concat(childDescendants);
 						});
@@ -94,7 +88,7 @@ class RallyHooks {
 								Name: project.Name + " Hook",
 								TargetUrl: "http://ad5e6996.ngrok.io",
 								Expressions: [{
-									Value: project.UUID,
+									Value: project.ObjectUUID,
 									Operator: "project"
 								}]
 							}
@@ -107,12 +101,12 @@ class RallyHooks {
 				});
 
 				// Store hook ids in file
-				fs.writeFileSync(path.join(__dirname, './webhook-ids.json'), JSON.stringify(hookIDs), 'utf8');
+				fs.writeFileSync(webhookIdsFilePath, JSON.stringify(hookIDs), 'utf8');
 			});
 	}
 
 	remove () {
-		var hookIDs = JSON.parse( fs.readFileSync(path.join(__dirname, './webhook-ids.json'), 'utf8') );
+		var hookIDs = JSON.parse(webhookIdsFilePath, 'utf8') );
 
 		// Send delete requests for all webhooks
 		return Promise.all(hookIDs.map((hookID) => {
@@ -120,12 +114,16 @@ class RallyHooks {
 				method: 'DELETE',
 				url: 'https://rally1.rallydev.com/notifications/api/v2/webhook/' + hookID
 			}).catch((err) => {
-				if (err.Errors[0].message == "Webhook not found") return;
-				else throw err;
+				if (err.Errors[0].message == "Webhook not found") {
+					l.warn("Could not delete previously created webhook: not found.");
+					return;
+				} else {
+					throw err;
+				}
 			});
 		// Remove webhook ids from file
 		})).then((_) => {
-			fs.writeFileSync(path.join(__dirname, './webhook-ids.json'), '[]', 'utf8');
+			fs.writeFileSync(webhookIdsFilePath, '[]', 'utf8');
 		});
 	}
 
@@ -134,7 +132,7 @@ class RallyHooks {
 	}
 }
 
-/*var rallyHooks = new RallyHooks(22560124149);
+/*var rallyHooks = new RallyWebhooks(22560124149);
 
 rallyHooks
 	.remove()
@@ -142,4 +140,4 @@ rallyHooks
 		rallyHooks.create();
 	});*/
 
-module.exports = RallyHooks;
+module.exports = RallyWebhooks;

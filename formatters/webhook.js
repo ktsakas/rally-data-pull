@@ -3,7 +3,7 @@
 var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
-	FormatUtils = require('./utils'),
+	FormatUtils = require('./base'),
 	testObj = JSON.parse(fs.readFileSync('trash/webhook.json', 'utf8'));
 
 class WebhookFormatter extends FormatUtils {
@@ -34,14 +34,20 @@ class WebhookFormatter extends FormatUtils {
 	}
 
 	formatWebhook () {
-		this.fixKeys();
-		this.schemaFormat('hook');
-		this.parseDates();
+		var self = this;
 
-		return this.obj;
+		this.fixKeys();
+		return this.format('hook')
+			.then(() => {
+				self.parseDates();
+
+				return this.obj;
+			});
 	}
 }
 
-l.debug( new WebhookFormatter(testObj.message).formatWebhook() );
+new WebhookFormatter(testObj.message).formatWebhook().then((revision) => {
+	l.debug(revision);
+});
 
 module.exports = WebhookFormatter;

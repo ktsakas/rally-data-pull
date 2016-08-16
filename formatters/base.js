@@ -3,21 +3,22 @@ var config = require("../config/config"),
 	fs = require('fs'),
 	translation = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),
 	tracked = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8')),
-	testObj = JSON.parse(fs.readFileSync('trash/test-obj.json', 'utf8'));
+	testObj = JSON.parse(fs.readFileSync('trash/test-obj.json', 'utf8')),
+	RallyAPI = require('../rally/api');
 
 const assert = require('assert');
 
 var flatten = require('flat'),
 	unflatten = flatten.unflatten;
 
-class FormatUtils {
+class FormatBase {
 	constructor (obj) {
 		assert(obj);
 
 		this.obj = obj;
 	}
 
-	schemaFormat (mode) {
+	format (mode) {
 		assert(mode, "Missing mode argument.");
 
 		this.flatten()
@@ -27,7 +28,56 @@ class FormatUtils {
 			.unflatten()
 			.addDummyData();
 
-		return this.obj;
+
+		var proms = [];
+		proms.push( this.addProjectHierarchy() );
+		proms.push( this.addTagNames() );
+		proms.push( this.addDiscussionCount() );
+
+		return Promise.all(proms).then(() => this.obj);
+	}
+
+	addProjectHierarchy (projectID) {
+		var self = this;
+		projectID = projectID || this.obj.Project.ID;
+
+		return RallyAPI
+			.getProject(projectID)
+			.then((project) => {
+				if (!this.obj.ProjectHierarchy) this.obj.ProjectHierarchy = [];
+				self.obj.ProjectHierarchy.push(project._refObjectName);
+
+				if (project.Parent) {
+					return self.addProjectHierarchy(project.Parent._refObjectUUID);
+				}
+			});
+	}
+
+	addTagNames () {
+		return RallyAPI
+			.getTags(this.obj.ObjectID)
+			.then((tags) => {
+				this.obj.Tags = tags;
+			});
+	}
+
+	addDiscussionCount () {
+		var self = this;
+
+		return RallyAPI
+			.getDiscussions(self.obj.Story.ID)
+			.then((discussions) => {
+				var totalPosts = 0,
+					exitDate = new Date(this.obj.Exited);
+
+				discussions.forEach((discussion) => {
+					var postDate = new Date(discussion.CreationDate);
+
+					if (postDate.getTime() <= exitDate.getTime()) totalPosts++;
+				});
+				
+				self.obj.TotalPosts = totalPosts;
+			});
 	}
 
 	addDummyData () {
@@ -108,7 +158,7 @@ class FormatUtils {
 	}
 }
 
-var formatter = new FormatUtils(testObj);
+var formatter = new FormatBase(testObj);
 
 formatter.flatten(testObj);
 // l.debug( "flattened obj: ", testObj );
@@ -127,4 +177,4 @@ testObj = formatter.unflatten(testObj);
 // l.debug( "unflattened obj: ", testObj );
 // l.debug( "keys: ", Object.keys(testObj) );
 
-module.exports = FormatUtils;
+module.exports = FormatBase;

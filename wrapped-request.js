@@ -22,12 +22,12 @@ class WrappedRequestPromise {
 		return rp(req)
 				// Try the request again on error
 				.catch((err) => {
-					if (err.message.code === 'ETIMEDOUT') return rp(req);
+					if (err.message === 'Error: ETIMEDOUT') return rp(req);
 					else throw err;
 				})
 				// If you fail twice exit the program
 				.catch((err) => {
-					if (err.message.code === 'ETIMEDOUT') {
+					if (err.message === 'Error: ETIMEDOUT') {
 						l.error(err);
 						l.error("Connection timedout twice. Exiting...");
 						process.exit(1);
@@ -69,6 +69,9 @@ class WrappedRequestPromise {
 				// We should never fail to parse the JSON
 				.catch((err) => {
 					l.error("Failed to parse JSON. Exiting...", err);
+					l.error("message: ", err.message);
+					l.error("Error: ", err.message.Error);
+					l.error("error: ", err.message.Error);
 					process.exit(1);
 				});
 	}

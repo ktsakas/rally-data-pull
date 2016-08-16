@@ -1,3 +1,5 @@
+"use strict";
+
 var config = require('../config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
@@ -12,82 +14,82 @@ var config = require('../config/config'),
 		json: true
 	});
 
+const ENDPOINTS = {
+	WORKSPACE: "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/",
+	PROJECT: "https://rally1.rallydev.com/slm/webservice/v2.0/project/",
+	TAG: "https://rally1.rallydev.com/slm/webservice/v2.0/tag/",
+	USER: "https://rally1.rallydev.com/slm/webservice/v2.0/user/",
+	ARTIFACT: "https://rally1.rallydev.com/slm/webservice/v2.0/artifact/"
+};
+
 var workspaceURL = "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/" + config.rally.workspaceID,
 	projectURL = "https://rally1.rallydev.com/slm/webservice/v2.0/project/" + config.rally.projectID;
 
 var cachedUsers = {},
-	cachedProjects = {},
-	cachedTags = {};
+	cachedProjects = {};
 
 class RallyAPI {
-	static getTagName(tagID) {
-		if ( cachedTags[tagID] ) return Promise.resolve(cachedTags[tagID]);
-
-		var tagURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/tag/' + tagID;
-
-		return new rp({ method: 'GET', uri: tagURL })
-			.then((res) => res.Tag._refObjectName);
+	static getTags (artifactID) {
+		return new rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Tags" })
+			.then((res) => {
+				return res.QueryResult.Results.map((tag) => tag.Name);
+			});
 	}
 
-	static getProjectName (projectID) {
-		if ( cachedProjects[projectID] ) return Promise.resolve(cachedProjects[projectID]);
+	static getProject (projectID) {
+		if ( cachedProjects[projectID] ) {
+			return Promise.resolve(cachedProjects[projectID]);
+		}
 
-		var projectURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/Project/' + projectID;
-
-		return new rp({ method: 'GET', uri: projectURL, })
+		return new rp({ method: 'GET', uri: ENDPOINTS.PROJECT + projectID })
 			.then((res) => {
-				if (res.Project._refObjectName) {
-					cachedProjects[projectID] = res.Project._refObjectName;
+				cachedProjects[projectID] = res.Project;
 
-					return cachedProjects[projectID];
-				} else {
-					cachedProjects[projectID] = "unknown";
-
-					return cachedProjects[projectID];
-				}
+				return cachedProjects[projectID];
 			});
 	}
 
 	static getUserName (userID) {
-		if ( !cachedUsers[userID] ) {
-			var userURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/user/' + userID;
-
-			return new rp({ method: 'GET', uri: userURL })
-				.then((res) => {
-					if (res.User) {
-						cachedUsers[userID] = res.User.FirstName +  " " + res.User.LastName;
-
-						return cachedUsers[userID];
-					} else {
-						cachedUsers[userID] = "unknown";
-
-						return cachedUsers[userID];
-					}
-				});
-		} else {
+		if (cachedUsers[userID]) {
 			return Promise.resolve(cachedUsers[userID]);
 		}
+
+		return new rp({ method: 'GET', uri: ENDPOINTS.USER + userID })
+			.then((res) => {
+				if (res.User) {
+					cachedUsers[userID] = res.User.FirstName +  " " + res.User.LastName;
+				// TODO: Fix this
+				} else {
+					cachedUsers[userID] = "unknown";
+				}
+
+				return cachedUsers[userID];
+			});
+	}
+
+	static getProjectChildren (projectID) {
+		var projectChildrenURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/Project/' + projectID + '/Children';
+
+		return new rp({ method: 'GET', uri: projectChildrenURL })
+			.then((res) => res.QueryResult.Results);
 	}
 
 	static getDiscussions (artifactID) {
-		var discussionURL = 
-			"https://rally1.rallydev.com/slm/webservice/v2.0/artifact/" + artifactID + "/Discussion";
-
-		return new rp({ method: 'GET', uri: discussionURL })
+		return new rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Discussion" })
 			// TODO: fix some requests are giving maintenance error
 			.then((res) => res.QueryResult ? res.QueryResult.Results : []);
 	}
 
-	static getArtifactRevisions (artifact, workspaceID) {
+	static getArtifactRevisions (artifactID, workspaceID) {
 		var lookbackURL =
-			'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + config.rally.workspaceID + '/artifact/snapshot/query.js';
+			'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + workspaceID + '/artifact/snapshot/query.js';
 
 		return new rp({
 			pagesize: 200,
 			method: 'GET',
 			uri: lookbackURL,
 			qs: {
-				find: '{"ObjectID":' + artifact.ObjectID + '}',
+				find: '{"ObjectID":' + artifactID + '}',
 				fields: true,
 				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'
 			}
@@ -95,11 +97,9 @@ class RallyAPI {
 	}
 
 	static getArtifacts (start, pagesize) {
-		var artifactURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/artifact/';
-
 		var options = {
 			method: 'GET',
-			uri: artifactURL,
+			uri: ENDPOINTS.ARTIFACT,
 			qs: {
 				workspace: workspaceURL,
 				pagesize: pagesize,
@@ -109,18 +109,16 @@ class RallyAPI {
 		};
 
 		if (config.rally.projectID) {
-			options.qs.project = projectURL;
+			options.qs.project = ENDPOINTS.PROJECT + config.rally.projectID;
 		}
 
 		return new rp(options).then((res) => res.QueryResult);
 	}
 
 	static countArtifacts () {
-		var artifactURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/artifact/';
-
 		var options = {
 			method: 'GET',
-			uri: artifactURL,
+			uri: ENDPOINTS.ARTIFACT,
 			qs: {
 				workspace: workspaceURL,
 				pagesize: 1
@@ -128,7 +126,7 @@ class RallyAPI {
 		};
 
 		if (config.rally.projectID) {
-			options.qs.project = projectURL;
+			options.qs.project = ENDPOINTS.PROJECT + config.rally.projectID;
 		}
 
 		return new rp(options).then((res) => res.QueryResult.TotalResultCount);

@@ -10,26 +10,12 @@ class SnapshotsFormatter {
 		this.obj = obj;
 	}
 
-	addDiscussionCount () {
-		var self = this;
+	addFormattedID (formattedID) {
+		this.obj.forEach((snapshot, i) => {
+			this.obj[i].FormattedID = formattedID;
+		});
 
-		return RallyAPI
-			.getDiscussions(self.obj[0].ObjectID)
-			.then((discussions) => {
-				var totalPosts = 0;
-
-				self.obj.forEach((revision, i) => {
-					var exitDate = new Date(revision._ValidTo);
-
-					discussions.forEach((discussion) => {
-						var postDate = new Date(discussion.CreationDate);
-
-						if (postDate.getTime() <= exitDate.getTime()) totalPosts++;
-					});
-					
-					self.obj[i].TotalPosts = totalPosts;
-				});
-			});
+		return this;
 	}
 
 	formatSnapshots () {
@@ -39,7 +25,6 @@ class SnapshotsFormatter {
 					.formatSnapshot()
 					.then((snapshot) => {
 						self.obj[i] = snapshot;
-						self.addDiscussionCount();
 					});
 			});
 

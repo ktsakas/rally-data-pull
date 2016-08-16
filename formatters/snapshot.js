@@ -3,9 +3,9 @@ var config = require("../config/config"),
 	fs = require('fs'),
 	testObj = JSON.parse(fs.readFileSync('trash/revisions.json', 'utf8')),
 	RallyAPI = require('../rally/api'),
-	FormatUtils = require('./base');
+	FormatBase = require('./base');
 
-class SnapshotFormatter extends FormatUtils {
+class SnapshotFormatter extends FormatBase {
 	constructor (obj) {
 		super(obj);
 	}
@@ -29,7 +29,7 @@ class SnapshotFormatter extends FormatUtils {
 	formatSnapshot () {
 		var proms = [],
 			self = this;
-		
+
 		proms.push( this.format('api') );
 		proms.push( this.hydrateAuthor() );
 

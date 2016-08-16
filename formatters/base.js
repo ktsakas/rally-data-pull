@@ -93,7 +93,7 @@ class FormatBase {
 
 	nullMissingFields () {
 		for (var field in this.obj) {
-			if ( !this.obj[ field ] && tracked.indexOf(field) == -1 ) {
+			if ( typeof this.obj[ field ] == "undefined" && tracked.indexOf(field) == -1 ) {
 				this.obj[ field ] = null;
 			}
 		}

@@ -4,11 +4,11 @@ var express = require("express"),
 	app = express(),
 	bodyParser = require('body-parser'),
 	config = require('./config/config'),
-	l = config.logger,
-	parseUtils = require('./models/utils');
+	l = config.logger;
 
 // Import models
-var Webhook = require('./rally/hooks'),
+var WebhookFormatter = require('./formatters/webhook'),
+	Webhook = require('./rally/webhooks'),
 	Revisions = require('./models/revision');
 
 app.use(bodyParser.json())
@@ -21,28 +21,14 @@ app.use(bodyParser.json())
  * @param  {response}
  */
 app.post('/webhook', function (req, res) {
-	var hookObj = req.body.message,
-		// hook = new Webhook(hookObj),
-		artifactID = hookObj.object_id;
+	var hookObj = req.body.message;
 
-	// Save revision as separate type
-	// var revision = Revision.fromHook(artifactID, hookObj);
-	// revision.save().then((res) => {});
 
-	Webhook.invertKeyName(hookObj.state);
-	Webhook.invertKeyName(hookObj.changes);
+	var ret = new WebhookFormatter(hookObj).formatWebhook().then((hook) => {
+		// Respond with the stored webhook
+		res.json(hook);
+	});
 
-	if (hookObj.action == "created" || )
-
-	res.json(hookObj);
-
-	var snapshotObj = parseUtils.flatten(hookObj);
-	parseUtils.renameFields(snapshotObj, 'hook');
-	parseUtils.removeUnused(snapshotObj);
-	hookObj = parseUtils.unflatten(snapshotObj);
-
-	// Respond with the stored webhook
-	// res.json(hookObj);
 });
 
 /**

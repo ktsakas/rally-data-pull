@@ -106,7 +106,7 @@ class RallyWebhooks {
 	}
 
 	remove () {
-		var hookIDs = JSON.parse(webhookIdsFilePath, 'utf8') );
+		var hookIDs = JSON.parse(webhookIdsFilePath, 'utf8');
 
 		// Send delete requests for all webhooks
 		return Promise.all(hookIDs.map((hookID) => {

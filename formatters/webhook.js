@@ -3,10 +3,10 @@
 var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
-	FormatUtils = require('./base'),
+	FormatBase = require('./base'),
 	testObj = JSON.parse(fs.readFileSync('trash/webhook.json', 'utf8'));
 
-class WebhookFormatter extends FormatUtils {
+class WebhookFormatter extends FormatBase {
 	constructor (hookObj) {
 		super(hookObj);
 	}

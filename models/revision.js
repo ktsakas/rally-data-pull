@@ -91,7 +91,7 @@ class Revision {
 			.findLatestRevision()
 			.then((latestRevision) => {
 				if ( self.hasTrackedFields() ) {
-					if (latestRevision) latestRevision.setExited(self.model.Exited);
+					if (latestRevision) latestRevision.setExited(self.model.Entered);
 
 					stateOrm.index(self.model, self._id);
 				} else {
@@ -99,7 +99,7 @@ class Revision {
 					assert(latestRevision);
 					assert(latestRevision.hasTrackedFields());
 
-					// delete self.model.Entered;
+					self.model.Entered = latestRevision.getObj().Entered;
 					latestRevision.update(self.model);
 				}
 			});

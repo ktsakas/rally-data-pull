@@ -1,12 +1,16 @@
 var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
+	assert = require('assert'),
 	testObj = JSON.parse(fs.readFileSync('trash/revisions.json', 'utf8')),
 	RallyAPI = require('../rally/api'),
 	SnapshotFormatter = require('./snapshot');
 
 class SnapshotsFormatter {
 	constructor (obj) {
+		assert(obj);
+		assert(obj.length);
+
 		this.obj = obj;
 	}
 
@@ -16,6 +20,16 @@ class SnapshotsFormatter {
 		});
 
 		return this;
+	}
+
+	existsCurrentSnapshot() {
+		for (var i= 0; i < this.obj.length; i++) {
+			if ( !this.obj[i].Exited ) return true;
+		}
+
+		l.error("Could not get the latest state for user story.\n");
+		l.error(this.obj);
+		process.exit(1);
 	}
 
 	formatSnapshots () {
@@ -28,7 +42,9 @@ class SnapshotsFormatter {
 					});
 			});
 
-		return Promise.all(proms).then(() => self.obj);
+		return Promise.all(proms)
+			.then( this.existsCurrentSnapshot.bind(this) )
+			.then(() => self.obj);
 	}
 }
 

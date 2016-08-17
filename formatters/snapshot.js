@@ -23,6 +23,10 @@ class SnapshotFormatter extends FormatBase {
 			this.obj.Exited = null;
 		}
 
+		if (this.obj.Story.ID == 59466256565 && this.obj.Exited == null) {
+			l.debug("found one: ", this.obj);
+		}
+
 		super.parseDates();
 	}
 
@@ -32,6 +36,7 @@ class SnapshotFormatter extends FormatBase {
 
 		proms.push( this.format('api') );
 		proms.push( this.hydrateAuthor() );
+		proms.push( this.parseDates() );
 
 		return Promise
 			.all(proms)
@@ -41,7 +46,7 @@ class SnapshotFormatter extends FormatBase {
 }
 
 new SnapshotFormatter(testObj.Results[0]).formatSnapshot().then((obj) => {
-	l.debug(obj);
+	// l.debug(obj);
 });
 
 module.exports = SnapshotFormatter;

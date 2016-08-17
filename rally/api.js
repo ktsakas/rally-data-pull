@@ -3,8 +3,9 @@
 var config = require('../config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
+	assert = require('assert'),
 	rp = require('../wrapped-request').defaults({
-		timeout: 10000,
+		timeout: 20000,
 		auth: {
 			user: config.rally.user,
 			pass: config.rally.pass,
@@ -30,13 +31,22 @@ var cachedUsers = {},
 
 class RallyAPI {
 	static getTags (artifactID) {
+		assert(artifactID);
+
 		return new rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Tags" })
 			.then((res) => {
+				if (!res.QueryResult) {
+					l.debug("undef: ", typeof res);
+					process.exit(1);
+				}
+
 				return res.QueryResult.Results.map((tag) => tag.Name);
 			});
 	}
 
 	static getProject (projectID) {
+		assert(projectID);
+
 		if ( cachedProjects[projectID] ) {
 			return Promise.resolve(cachedProjects[projectID]);
 		}
@@ -50,6 +60,8 @@ class RallyAPI {
 	}
 
 	static getUserName (userID) {
+		assert(userID);
+
 		if (cachedUsers[userID]) {
 			return Promise.resolve(cachedUsers[userID]);
 		}
@@ -80,15 +92,19 @@ class RallyAPI {
 			.then((res) => res.QueryResult ? res.QueryResult.Results : []);
 	}
 
-	static getArtifactRevisions (artifactID, workspaceID) {
+	static getArtifactRevisions (artifactID, workspaceID, start) {
+		assert(artifactID);
+		assert(workspaceID);
+
 		var lookbackURL =
 			'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + workspaceID + '/artifact/snapshot/query.js';
 
 		return new rp({
-			pagesize: 200,
 			method: 'GET',
 			uri: lookbackURL,
 			qs: {
+				pagesize: 100,
+				start: start || 1,
 				find: '{"ObjectID":' + artifactID + '}',
 				fields: true,
 				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'

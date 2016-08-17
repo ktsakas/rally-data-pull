@@ -1,7 +1,6 @@
 var program = require('commander');
 
 var args = program
-	// .option('-h, --help', 'Print this message')
 	.command('runserver', 'run server to recieve webhooks')
 	.command('pull', 'pull all data from rally (will take a while)')
 	.command('sethooks', 'create new webhooks on rally and remove previous ones.')

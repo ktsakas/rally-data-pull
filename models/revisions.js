@@ -66,6 +66,7 @@ class Revisions {
 
 			// For string type fields set them to not_analyzed
 			if (mapping[fieldName].type == "string") {
+				// mapping[fieldName].analyzer = "analyzer_keyword";
 				mapping[fieldName].index = "not_analyzed";
 			}
 		}
@@ -74,19 +75,42 @@ class Revisions {
 	}
 
 	static createMapping () {
+
 		return stateOrm.putMapping({
+			properties: Revisions.parseSchema(schema)
+		})
+		.catch((err) => {
+			l.error("Failed to create mapping for revision.");
+			l.error(err);
+		});
+
+		/*return stateOrm.putSettings({
+			index: {
+				analysis: {
+					analyzer: {
+						analyzer_keyword: {
+							tokenizer: "keyword",
+							filter: "lowercase"
+						}
+					}
+				}
+			}
+		 }).then((res) => {
+		 	stateOrm.putMapping({
 				properties: Revisions.parseSchema(schema)
 			})
 			.catch((err) => {
 				l.error("Failed to create mapping for revision.");
 				l.error(err);
 			});
+		});*/
 	}
 
 	save() {
 		this.models.forEach((revision) => {
 			var id = revision._id;
 			delete revision._id;
+
 			new Revision(revision, id).save();
 		});
 	}

@@ -52,6 +52,7 @@
 		"null_value": "-1"
 	},
 	"CreationDate": "date",
+	"Customer": "String",
 	"DataType": {
 		"type": "string",
 		"null_value": "N/A"
@@ -69,6 +70,7 @@
 		"null_value": "N/A"
 	},
 	"LastUpdateDate": "date",
+	"Region": "string",
 	"SalesforceCase": "string",
 	"SalesforcePriority": {
 		"type": "string",

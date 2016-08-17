@@ -24,18 +24,54 @@ var totalArtifacts = null,
 
 var fetchQueue = async.queue(function (start, callback) {
 	RallyPull.pullArtifacts(start, PAGESIZE).then(callback);
-}, 200);
+}, 1);
 
 var revisionQueue = async.queue(function (artifact, callback) {
 	RallyPull.pullHistory(artifact, config.rally.workspaceID).then(callback);
-}, 50);
+}, 1);
 
 class RallyPull {
-	static pullHistory (artifact, workspaceID) {		
+	static pullRevisions(artifactID, workspaceID) {
 		return RallyAPI
-			.getArtifactRevisions(artifact.ObjectID, workspaceID)
+			.getArtifactRevisions(artifactID, workspaceID, 1)
 			.then((res) => {
-				return new SnapshotsFormatter(res.Results)
+				if (!res.Results) {
+					l.debug("res: ", res);
+					process.exit(1);
+				}
+
+				assert(res.Results);
+
+				// Two dimentional array that holds all revisions
+				var proms = [];
+
+				// If there are more revisions for this story pull them all
+				for (var start = 100; start < res.TotalResultCount; start += 100) {
+					proms.push(
+						RallyAPI
+							.getArtifactRevisions(artifactID, workspaceID, 1 + start)
+							.then((extraRes) => {
+								res.Results = res.Results.concat(extraRes.Results);
+							})
+					);
+				}
+
+				return Promise.all(proms)
+					.then(() => res.Results);
+			});
+	}
+
+	static pullHistory (artifact, workspaceID) {
+		return RallyPull
+			.pullRevisions(artifact.ObjectID, workspaceID)
+			.then((results) => {
+
+				if (results.length == 0) {
+					// l.warn("zero results");
+					return;
+				}
+
+				return new SnapshotsFormatter(results)
 					.addFormattedID(artifact.FormattedID)
 					.formatSnapshots()
 					.then((snapshots) => {
@@ -130,5 +166,9 @@ class RallyPull {
 }
 
 RallyPull.pullAll();
+/*RallyPull.pullHistory({
+	ObjectID: 59466256565,
+	FormattedID: "random"
+}, 6692415259);*/
 
 module.exports = RallyPull;

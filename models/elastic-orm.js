@@ -76,6 +76,25 @@ class ElasticOrm {
 		return Promise.all(proms);
 	}
 
+	putSettings(settings) {
+		var self = this;
+
+		return this.esClient.indices
+			.close({
+				index: this._index
+			})
+			.then((res) => {
+				return self.esClient.indices.putSettings({
+					index: self._index,
+					body: settings
+				}).then(() => {
+					return self.esClient.indices.open({
+						index: this._index
+					});
+				});
+			});
+	}
+
 	putMapping(mapping) {
 		return this.esClient.indices.putMapping({
 			index: this._index,

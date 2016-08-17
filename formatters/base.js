@@ -55,7 +55,7 @@ class FormatBase {
 
 	addTagNames () {
 		return RallyAPI
-			.getTags(this.obj.ObjectID)
+			.getTags(this.obj.Story.ID)
 			.then((tags) => {
 				this.obj.Tags = tags;
 			});
@@ -81,6 +81,8 @@ class FormatBase {
 	}
 
 	addStatus () {
+		assert(this.obj.Project);
+
 		if (
 			this.obj.Project.Name.indexOf("L3") != -1 &&
 			this.obj.L3KanbanStage != "To Be Scheduled" &&

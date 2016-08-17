@@ -4,7 +4,8 @@ var config = require('./config/config'),
 	rp = require('request-promise'),
 	fs = Promise.promisifyAll(require('fs')),
 	queryString = require('querystring'),
-	sanitize = require("sanitize-filename");
+	sanitize = require("sanitize-filename"),
+	crypto = require('crypto');
 
 
 var cache = false;
@@ -22,13 +23,11 @@ class WrappedRequestPromise {
 		return rp(req)
 				// Try the request again on error
 				.catch((err) => {
-					if (err.message === 'Error: ETIMEDOUT') return rp(req);
-					else throw err;
+					return rp(req);
 				})
 				// If you fail twice exit the program
 				.catch((err) => {
 					if (err.message === 'Error: ETIMEDOUT') {
-						l.error(err);
 						l.error("Connection timedout twice. Exiting...");
 						process.exit(1);
 					} else {
@@ -39,11 +38,15 @@ class WrappedRequestPromise {
 
 	cachedRequest (req) {
 		// File path for cached response
-		var fileName = req.uri + "?" + queryString.unescape(queryString.stringify(req.qs)),
-			filePath = "./tmp/" + sanitize(fileName);
+		var queryURL = req.uri + "?" + queryString.unescape(queryString.stringify(req.qs)),
+			fileName = crypto.createHash('md5').update(queryURL).digest('hex'),
+			filePath = "./cached-responses/" + fileName;
 
 				// Try to find cached response
 		return fs.readFileAsync(filePath, 'utf8')
+
+				// Parse from string to json
+				.then((contents) => JSON.parse(contents))
 
 				// If you dont find the response in the cache
 				.catch((err) => {
@@ -59,21 +62,15 @@ class WrappedRequestPromise {
 								process.exit(1);
 							}
 							
-							return resString;
+							return res;
 						});
-				})
-
-				// Parse from string to json
-				.then((contents) => JSON.parse(contents))
+				});
 
 				// We should never fail to parse the JSON
-				.catch((err) => {
+				/*.catch((err) => {
 					l.error("Failed to parse JSON. Exiting...", err);
-					l.error("message: ", err.message);
-					l.error("Error: ", err.message.Error);
-					l.error("error: ", err.message.Error);
 					process.exit(1);
-				});
+				});*/
 	}
 
 	static defaults(options) {

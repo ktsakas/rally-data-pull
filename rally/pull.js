@@ -22,13 +22,17 @@ var totalArtifacts = null,
 	fetchProgress,
 	historyProgress;
 
+var requestQueue = async.queue(function (makeRequest, callback) {
+	makeRequest.then(callback);
+}, 5);
+
 var fetchQueue = async.queue(function (start, callback) {
 	RallyPull.pullArtifacts(start, PAGESIZE).then(callback);
-}, 1);
+}, 5);
 
 var revisionQueue = async.queue(function (artifact, callback) {
 	RallyPull.pullHistory(artifact, config.rally.workspaceID).then(callback);
-}, 1);
+}, 10);
 
 class RallyPull {
 	static pullRevisions(artifactID, workspaceID) {

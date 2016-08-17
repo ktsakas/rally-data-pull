@@ -109,6 +109,9 @@ class RallyAPI {
 				fields: true,
 				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'
 			}
+		})
+		.then((res) => {
+			return res;
 		});
 	}
 

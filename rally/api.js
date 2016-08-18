@@ -33,7 +33,7 @@ class RallyAPI {
 	static getTags (artifactID) {
 		assert(artifactID);
 
-		return new rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Tags" })
+		return rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Tags" })
 			.then((res) => {
 				if (!res.QueryResult) {
 					l.debug("undef: ", typeof res);
@@ -51,7 +51,7 @@ class RallyAPI {
 			return Promise.resolve(cachedProjects[projectID]);
 		}
 
-		return new rp({ method: 'GET', uri: ENDPOINTS.PROJECT + projectID })
+		return rp({ method: 'GET', uri: ENDPOINTS.PROJECT + projectID })
 			.then((res) => {
 				cachedProjects[projectID] = res.Project;
 
@@ -66,7 +66,7 @@ class RallyAPI {
 			return Promise.resolve(cachedUsers[userID]);
 		}
 
-		return new rp({ method: 'GET', uri: ENDPOINTS.USER + userID })
+		return rp({ method: 'GET', uri: ENDPOINTS.USER + userID })
 			.then((res) => {
 				if (res.User) {
 					cachedUsers[userID] = res.User.FirstName +  " " + res.User.LastName;
@@ -82,12 +82,12 @@ class RallyAPI {
 	static getProjectChildren (projectID) {
 		var projectChildrenURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/Project/' + projectID + '/Children';
 
-		return new rp({ method: 'GET', uri: projectChildrenURL })
+		return rp({ method: 'GET', uri: projectChildrenURL })
 			.then((res) => res.QueryResult.Results);
 	}
 
 	static getDiscussions (artifactID) {
-		return new rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Discussion" })
+		return rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Discussion" })
 			// TODO: fix some requests are giving maintenance error
 			.then((res) => res.QueryResult ? res.QueryResult.Results : []);
 	}
@@ -99,7 +99,7 @@ class RallyAPI {
 		var lookbackURL =
 			'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/' + workspaceID + '/artifact/snapshot/query.js';
 
-		return new rp({
+		return rp({
 			method: 'GET',
 			uri: lookbackURL,
 			qs: {
@@ -111,6 +111,12 @@ class RallyAPI {
 			}
 		})
 		.then((res) => {
+			if (!res.Results) {
+				l.debug(typeof res);
+				l.debug("res: ", res);
+				process.exit(1);
+			}
+
 			return res;
 		});
 	}
@@ -131,7 +137,7 @@ class RallyAPI {
 			options.qs.project = ENDPOINTS.PROJECT + config.rally.projectID;
 		}
 
-		return new rp(options).then((res) => res.QueryResult);
+		return rp(options).then((res) => res.QueryResult);
 	}
 
 	static countArtifacts () {
@@ -148,7 +154,7 @@ class RallyAPI {
 			options.qs.project = ENDPOINTS.PROJECT + config.rally.projectID;
 		}
 
-		return new rp(options).then((res) => res.QueryResult.TotalResultCount);
+		return rp(options).then((res) => res.QueryResult.TotalResultCount);
 	}
 }
 

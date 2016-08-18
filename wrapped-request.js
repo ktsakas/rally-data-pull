@@ -1,8 +1,8 @@
 var config = require('./config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
-	// rp = require('request-promise'),
-	rp = require('request'),
+	rp = require('request-promise'),
+	// rp = require('request'),
 	fs = Promise.promisifyAll(require('fs')),
 	queryString = require('querystring'),
 	sanitize = require("sanitize-filename"),
@@ -11,30 +11,34 @@ var config = require('./config/config'),
 
 
 var cache = false,
-	requestQueue = async.queue(function (requestFn, callback) {
-		requestFn(callback);
-	}, 3);
+	requestQueue = async.queue((job, callback) => {
+		job().then( callback.bind(callback, null) ).catch(callback);
+	}, 100);
 
 function WrappedRequest (req) {
-	if (cache && req.method == 'GET') {
-		return WrappedRequest.cachedRequest(req);
-	} else {
-		return WrappedRequest.repeatOnErrorRequest(req);
-	}
+	return WrappedRequest.rateLimitedRequest(req);
 }
 
 WrappedRequest.rateLimitedRequest = function (req) {
-	return Promise.promisify(requestQueue.push)( rp.bind(rp, req) )
-		.then((res) => res.body);
+	var job = function () {
+		if (cache && req.method == 'GET') {
+			return WrappedRequest.cachedRequest(req);
+		} else {
+			return WrappedRequest.repeatOnErrorRequest(req);
+		}
+	};
+
+	return Promise.promisify(requestQueue.push)(job);
 }
 
-WrappedRequest.repeatOnErrorRequest = function (req) {
-	return WrappedRequest
-		.rateLimitedRequest(req)
+WrappedRequest.repeatOnErrorRequest = function (req) {	
+	return rp(req)
+
 		// Try the request again on error
 		.catch((err) => {
 			return rp(req);
 		})
+
 		// If you fail twice exit the program
 		.catch((err) => {
 			if (err.message === 'Error: ETIMEDOUT') {
@@ -46,23 +50,26 @@ WrappedRequest.repeatOnErrorRequest = function (req) {
 		});
 };
 
-WrappedRequest.cachedRequest = function (req) {
+var count = 0;
+WrappedRequest.cachedRequest = function (req) {	
 	// File path for cached response
 	var queryURL = req.uri + "?" + queryString.unescape(queryString.stringify(req.qs)),
 		fileName = crypto.createHash('md5').update(queryURL).digest('hex'),
-		filePath = "./cached-responses/" + fileName;
+		filePath = "./cached-responses/" + fileName,
+		fd = null;
 
 			// Try to find cached response
 	return fs.readFileAsync(filePath, 'utf8')
 
 			// Parse from string to json
-			.then((contents) => {
-				try {
-					return JSON.parse(contents);
-				} catch (e) {
-					l.error("Non-json response cached.");
-					process.exit(1);
+			.then((cachedRes) => {
+				cachedRes = JSON.parse(cachedRes);
+
+				if (typeof cachedRes != "object") {
+					throw Error("Non json response.");
 				}
+
+				return cachedRes;
 			})
 
 			// If you dont find the response in the cache
@@ -70,6 +77,12 @@ WrappedRequest.cachedRequest = function (req) {
 				return WrappedRequest
 					.repeatOnErrorRequest(req)
 					.then((res) => {
+						if (typeof res != "object") {
+							l.error("Response is not an object.");
+							l.error(req, res);
+							process.exit(1);
+						}
+
 						var resString = JSON.stringify(res);
 
 						try {

@@ -22,28 +22,11 @@ var totalArtifacts = null,
 	fetchProgress,
 	historyProgress;
 
-var requestQueue = async.queue(function (makeRequest, callback) {
-	makeRequest.then(callback);
-}, 5);
-
-var fetchQueue = async.queue(function (start, callback) {
-	RallyPull.pullArtifacts(start, PAGESIZE).then(callback);
-}, 5);
-
-var revisionQueue = async.queue(function (artifact, callback) {
-	RallyPull.pullHistory(artifact, config.rally.workspaceID).then(callback);
-}, 10);
-
 class RallyPull {
 	static pullRevisions(artifactID, workspaceID) {
 		return RallyAPI
 			.getArtifactRevisions(artifactID, workspaceID, 1)
 			.then((res) => {
-				if (!res.Results) {
-					l.debug("res: ", res);
-					process.exit(1);
-				}
-
 				assert(res.Results);
 
 				// Two dimentional array that holds all revisions
@@ -69,9 +52,8 @@ class RallyPull {
 		return RallyPull
 			.pullRevisions(artifact.ObjectID, workspaceID)
 			.then((results) => {
-
 				if (results.length == 0) {
-					// l.warn("zero results");
+					// l.warn("No revisions in story: " + artifact.ObjectID);
 					return;
 				}
 
@@ -98,14 +80,22 @@ class RallyPull {
 					return response;
 				}
 
-				response.Results.forEach((result) => artifacts.push({
-					ObjectID: result.ObjectID,
-					FormattedID: result.FormattedID
-				}));
-
 				fetchProgress.tick(PAGESIZE);
 
-				return response;
+				return response.Results.map((result) => {
+					return {
+						ObjectID: result.ObjectID,
+						FormattedID: result.FormattedID
+					}
+				});
+			}).then((artifacts) => {
+				if (60882613871 in artifacts) {
+					l.debug("whatever\n");
+				}
+
+				return Promise.all(artifacts.map((artifact) => {
+					RallyPull.pullHistory(artifact, config.rally.workspaceID);
+				}));
 			});
 	}
 
@@ -143,17 +133,19 @@ class RallyPull {
 				fetchProgress.total = totalArtifacts;
 				historyProgress.total = totalArtifacts;
 
-				var promises = [];
-				for (
-					var start = 1;
-					start < totalArtifacts;
-					start += PAGESIZE
-				) {
-					fetchQueue.push(start, function (err) {});
+				var starts = [];
+				for (var start = 1; start < totalArtifacts; start += PAGESIZE) {
+					starts.push(start);
 				}
+
+				Promise.reduce(starts, function (total, start) {
+					return RallyPull.pullArtifacts(start, PAGESIZE);						
+				}).then(() => {
+					l.debug("done!");
+				});
 				// fetchQueue.push(1, function (err) {});
 
-				var startFetchTime = new Date().getTime();
+				/*var startFetchTime = new Date().getTime();
 				fetchQueue.drain = function () {
 					var endFetchTime = new Date().getTime();
 					console.log("\ntook " + ((endFetchTime - startFetchTime)/1000) + " secs");
@@ -164,7 +156,7 @@ class RallyPull {
 				revisionQueue.drain = function () {
 					var endFetchTime = new Date().getTime();
 					console.log("\ntook " + ((endFetchTime - startFetchTime)/1000) + " secs");
-				};
+				};*/
 			});
 	}
 }

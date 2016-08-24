@@ -174,6 +174,22 @@ class ElasticOrm {
 		return this.esClient.update(params);
 	}
 
+	count(query) {
+		var params = {
+			index: this._index,
+			type: this._type,
+			body: {
+				query: {
+					bool: {
+						filter: query
+					}
+				}
+			}
+		};
+
+		return this.esClient.count(params);
+	}
+
 	filter(query) {
 		var params = {
 			index: this._index,
@@ -187,7 +203,10 @@ class ElasticOrm {
 			}
 		};
 
-		return this.esClient.search(params);
+		return this.esClient.search(params).then((res) => {
+			l.debug("search res: ", res);
+			return res;
+		});
 	}
 
 	typeExists(type) {

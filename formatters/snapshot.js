@@ -40,13 +40,13 @@ class SnapshotFormatter extends FormatBase {
 
 		return Promise
 			.all(proms)
-			.then(() => self.obj);
+			.then(() => self);
 
 	}
 }
 
-new SnapshotFormatter(testObj.Results[0]).formatSnapshot().then((obj) => {
+/*new SnapshotFormatter(testObj.Results[0]).formatSnapshot().then((obj) => {
 	// l.debug(obj);
-});
+});*/
 
 module.exports = SnapshotFormatter;

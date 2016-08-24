@@ -52,7 +52,7 @@
 		"null_value": "-1"
 	},
 	"CreationDate": "date",
-	"Customer": "String",
+	"Customer": "string",
 	"DataType": {
 		"type": "string",
 		"null_value": "N/A"

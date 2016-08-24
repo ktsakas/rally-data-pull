@@ -4,7 +4,8 @@ var config = require("../config/config"),
 	assert = require('assert'),
 	testObj = JSON.parse(fs.readFileSync('trash/revisions.json', 'utf8')),
 	RallyAPI = require('../rally/api'),
-	SnapshotFormatter = require('./snapshot');
+	SnapshotFormatter = require('./snapshot'),
+	deepAssign = require('deep-assign');;
 
 class SnapshotsFormatter {
 	constructor (obj) {
@@ -46,10 +47,47 @@ class SnapshotsFormatter {
 			.then( this.existsCurrentSnapshot.bind(this) )
 			.then(() => self.obj);
 	}
+
+	getRevisions () {
+		return this
+			.formatSnapshots()
+			.then((snapshots) => {
+				var revisions = [];
+
+				this.obj.forEach((snapshot) => {
+					var revision = snapshot.obj,
+						id = revision._id;
+					delete revision._id;
+
+					if ( snapshot.hasTrackedFields() ) {
+						// If there is a previous revision update it's exited date
+						if (revisions.length > 0) {
+							revisions[ revisions.length - 1 ].Exited = revision.Entered;
+
+							var durationMs =
+								new Date(this.obj.Exited).getTime() - new Date(this.obj.Entered).getTime();
+							revisions[ revisions.length - 1 ].DurationDays = durationMs / 1000 / 60 / 60 / 24;
+						}
+
+						revisions.push(revision);
+					} else {
+						delete revision.Entered;
+						delete revision.Exited;
+
+						revisions[ revisions.length - 1 ] = deepAssign(
+							revisions[ revisions.length - 1 ],
+							revision
+						);
+					}
+				});
+
+				return revisions;
+			});
+	}
 }
 
-new SnapshotsFormatter(testObj.Results).formatSnapshots().then((obj) => {
+/*new SnapshotsFormatter(testObj.Results).formatSnapshots().then((obj) => {
 	// l.debug(obj);
-});
+});*/
 
 module.exports = SnapshotsFormatter;

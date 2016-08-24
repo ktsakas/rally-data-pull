@@ -18,6 +18,15 @@ class FormatBase {
 		this.obj = obj;
 	}
 
+	hasTrackedFields() {
+		var fields = Object.keys(this.obj);
+		for (var i= 0; i < tracked.length; i++) {
+			if ( fields.indexOf(tracked[i]) != -1 ) return true;
+		}
+
+		return false;
+	}
+
 	format (mode) {
 		assert(mode, "Missing mode argument.");
 
@@ -86,13 +95,18 @@ class FormatBase {
 		if (
 			this.obj.Project.Name.indexOf("L3") != -1 &&
 			this.obj.L3KanbanStage != "To Be Scheduled" &&
+			this.obj.L3KanbanStage != "Icebox" &&
 			this.obj.L3KanbanStage != "Verified" &&
 			this.obj.L3KanbanStage != "Closed") {
 			this.obj.Status = "Res L3";
 		} else if (
-			this.obj.Project.Name.indexOf("L3") == -1 &&
+			(this.obj.Project.Name.indexOf("L3") == -1 &&
 			this.obj.L3KanbanStage != "Verified" &&
-			this.obj.L3KanbanStage != "Closed"
+			this.obj.L3KanbanStage != "Closed") ||
+			
+			(this.obj.Project.Name.indexOf("L3") != -1 &&
+			(this.obj.L3KanbanStage == "To Be Scheduled" ||
+			this.obj.L3KanbanStage == "Icebox"))
 		) {
 			this.obj.Status = "Product";
 		} else if (
@@ -145,7 +159,7 @@ class FormatBase {
 
 	// This is overriden by child classes
 	parseDates () {
-		var Entered = this.obj.Entered,
+		/*var Entered = this.obj.Entered,
 			Exited = this.obj.Exited;
 
 		if ( this.obj.Exited == null ) {
@@ -155,7 +169,7 @@ class FormatBase {
 				new Date(this.obj.Exited).getTime() - new Date(this.obj.Entered).getTime();
 
 			this.obj.DurationDays = durationMs / 1000 / 60 / 60 / 24;
-		}
+		}*/
 
 		return this;
 	}
@@ -188,21 +202,21 @@ class FormatBase {
 
 var formatter = new FormatBase(testObj);
 
-formatter.flatten(testObj);
-// l.debug( "flattened obj: ", testObj );
+formatter.flatten();
+// l.debug( "flattened obj: ", formatter.obj );
 
-formatter.renameFields(testObj, 'api');
-// l.debug( "renamed fields: ", testObj );
+formatter.renameFields('api');
+// l.debug( "renamed fields: ", formatter.obj );
 
-formatter.removeUnused(testObj);
-// l.debug( "removed unused: ", testObj );
+formatter.removeUnused();
+// l.debug( "removed unused: ", formatter.obj );
 
-formatter.parseDates(testObj);
-// l.debug( "parsed custom: ", testObj );
+formatter.parseDates();
+// l.debug( "parsed custom: ", formatter.obj );
 
 
-testObj = formatter.unflatten(testObj);
-// l.debug( "unflattened obj: ", testObj );
-// l.debug( "keys: ", Object.keys(testObj) );
+testObj = formatter.unflatten();
+// l.debug( "unflattened obj: ", formatter.obj );
+// l.debug( "keys: ", Object.keys(formatter.obj) );
 
 module.exports = FormatBase;

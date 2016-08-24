@@ -24,7 +24,9 @@ module.exports = {
 		server: "https://rally1.rallydev.com",
 
 		workspaceID: 6692415259,// 5339961604,
-		projectID: 9052682378,
+
+		// Reservations: 6716826537
+		projectID: 6716826537,
 	},
 
 	kibana: {
@@ -36,7 +38,7 @@ module.exports = {
 		// host: "localhost:9200",
 		log: "error",
 
-		index: "test",
+		index: "fixed",
 
 		types: {
 			webhook: "webhook",

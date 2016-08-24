@@ -104,7 +104,7 @@ class RallyAPI {
 			uri: lookbackURL,
 			qs: {
 				pagesize: 100,
-				start: start || 1,
+				start: start || 0,
 				find: '{"ObjectID":' + artifactID + '}',
 				fields: true,
 				hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]'
@@ -129,13 +129,16 @@ class RallyAPI {
 				workspace: workspaceURL,
 				pagesize: pagesize,
 				start: start,
+				query: '(c_StoryType = "L3/Salesforce")',
+				// Pull in newest first
+				order: "CreationDate desc",
 				fetch: "true"
 			}
 		};
 
-		if (config.rally.projectID) {
+		/*if (config.rally.projectID) {
 			options.qs.project = ENDPOINTS.PROJECT + config.rally.projectID;
-		}
+		}*/
 
 		return rp(options).then((res) => res.QueryResult);
 	}
@@ -146,13 +149,14 @@ class RallyAPI {
 			uri: ENDPOINTS.ARTIFACT,
 			qs: {
 				workspace: workspaceURL,
-				pagesize: 1
+				pagesize: 1,
+				query: '(c_StoryType = "L3/Salesforce")'
 			}
 		};
 
-		if (config.rally.projectID) {
+		/*if (config.rally.projectID) {
 			options.qs.project = ENDPOINTS.PROJECT + config.rally.projectID;
-		}
+		}*/
 
 		return rp(options).then((res) => res.QueryResult.TotalResultCount);
 	}

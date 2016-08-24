@@ -50,6 +50,8 @@ class Revision {
 			{ term: { "Story.ID": this.model.Story.ID } },
 			{ missing: { "field": "Exited" } }
 		]).then((result) => {
+			console.log("trying to find: ", this.model.Story.ID, result.hits.hits[0]);
+
 
 			return (result.hits.total == 0) ? null :
 					new Revision(result.hits.hits[0]);
@@ -77,30 +79,65 @@ class Revision {
 		this.update();
 	}
 
-	update(revisionObj) {
+	update() {
 		assert(this._id);
 
-		this.model = revisionObj;
-		stateOrm.update(this.model, this._id);
+		return stateOrm.update(this.model, this._id);
 	}
 
+	create() {
+		return stateOrm.index(this.model, this._id);
+	}
+
+	setExited(date) {
+		this.obj.Exited = date;
+
+		var durationMs =
+			new Date(this.obj.Exited).getTime() - new Date(this.obj.Entered).getTime();
+		this.obj.DurationDays = durationMs / 1000 / 60 / 60 / 24;
+
+		return this.update();
+	}
+
+	/*
+	NOTE: do not use this when pulling from the API, because ElasticSearch is not consistent
+	 */
 	save() {
 		var self = this;
 
-		return self
+		return this
 			.findLatestRevision()
 			.then((latestRevision) => {
-				if ( self.hasTrackedFields() ) {
-					if (latestRevision) latestRevision.setExited(self.model.Entered);
+				// If this revision has tracked fields
+				if (self.hasTrackedFields()) {
+					// Create a new revision
+					return stateOrm
+						.index(self.model, self._id)
+						.then((res) => {
+							l.debug("done!", res);
+							
+							if (!latestRevision)
+								return;
+							else
+								return latestRevision.setExited(self.model.Entered);
+						});
+					
 
-					stateOrm.index(self.model, self._id);
+				// Otherwise only update the fields
 				} else {
-					// Latest revision must exist here
+					l.debug("update");
+					l.debug("latest: ", latestRevision);
+
+					// Assert that the previous revision is valid
 					assert(latestRevision);
 					assert(latestRevision.hasTrackedFields());
 
-					self.model.Entered = latestRevision.getObj().Entered;
-					latestRevision.update(self.model);
+					// Do not change the state enter and exit times
+					// only update the fields
+					delete self.model.Entered;
+					delete self.model.Exited;
+
+					return latestRevision.update(self.model);
 				}
 			});
 	}

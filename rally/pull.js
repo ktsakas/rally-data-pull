@@ -25,7 +25,7 @@ var totalArtifacts = null,
 class RallyPull {
 	static pullRevisions(artifactID, workspaceID) {
 		return RallyAPI
-			.getArtifactRevisions(artifactID, workspaceID, 1)
+			.getArtifactRevisions(artifactID, workspaceID, 0)
 			.then((res) => {
 				assert(res.Results);
 
@@ -36,7 +36,7 @@ class RallyPull {
 				for (var start = 100; start < res.TotalResultCount; start += 100) {
 					proms.push(
 						RallyAPI
-							.getArtifactRevisions(artifactID, workspaceID, 1 + start)
+							.getArtifactRevisions(artifactID, workspaceID, start)
 							.then((extraRes) => {
 								res.Results = res.Results.concat(extraRes.Results);
 							})
@@ -44,7 +44,10 @@ class RallyPull {
 				}
 
 				return Promise.all(proms)
-					.then(() => res.Results);
+					.then(() => {
+						l.debug("res: ", res.Results.length);
+						return res.Results;
+					});
 			});
 	}
 
@@ -59,12 +62,13 @@ class RallyPull {
 
 				return new SnapshotsFormatter(results)
 					.addFormattedID(artifact.FormattedID)
-					.formatSnapshots()
+					.getRevisions()
 					.then((snapshots) => {
-						return new Revisions(snapshots).save();
+						// l.debug("saved: ", snapshots);
+						return new Revisions(snapshots).create();
 					});
-			})
-			.then(historyProgress.tick);
+			});
+			// .then(historyProgress.tick);
 	}
 
 	static pullArtifacts (start, pagesize) {
@@ -161,10 +165,10 @@ class RallyPull {
 	}
 }
 
-RallyPull.pullAll();
-/*RallyPull.pullHistory({
-	ObjectID: 59466256565,
+// RallyPull.pullAll();
+RallyPull.pullHistory({
+	ObjectID: 14504494816,
 	FormattedID: "random"
-}, 6692415259);*/
+}, config.rally.workspaceID);
 
 module.exports = RallyPull;

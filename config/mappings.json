@@ -8,7 +8,7 @@
 		"hook": "transaction.timestamp"
 	},
 	"Exited": {
-		"api": "_ValidTo",
+		"api": "PRODUCED PROGRAMMATICALLY BY LOOKING AT THE PREVIOUS ENTERED FIELD",
 		"hook": "PRODUCED PROGRAMMATICALLY BY LOOKING AT THE PREVIOUS ENTERED FIELD"
 	},
 	"DurationDays": {

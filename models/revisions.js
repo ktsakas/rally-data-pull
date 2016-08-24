@@ -1,6 +1,7 @@
 var config = require("../config/config"),
 	l = config.logger,
 	ElasticOrm = require('./elastic-orm'),
+	Promise = require("bluebird"),
 	stateOrm = new ElasticOrm(
 		config.esClient,
 		config.elastic.index,
@@ -65,9 +66,9 @@ class Revisions {
 			}
 
 			// For string type fields set them to not_analyzed
-			if (mapping[fieldName].type == "string") {
-				// mapping[fieldName].analyzer = "analyzer_keyword";
-				mapping[fieldName].index = "not_analyzed";
+			if (mapping[fieldName].type.toLowerCase() == "string") {
+				mapping[fieldName].analyzer = "analyzer_keyword";
+				// mapping[fieldName].index = "not_analyzed";
 			}
 		}
 
@@ -76,15 +77,15 @@ class Revisions {
 
 	static createMapping () {
 
-		return stateOrm.putMapping({
+		/*return stateOrm.putMapping({
 			properties: Revisions.parseSchema(schema)
 		})
 		.catch((err) => {
 			l.error("Failed to create mapping for revision.");
 			l.error(err);
-		});
+		});*/
 
-		/*return stateOrm.putSettings({
+		return stateOrm.putSettings({
 			index: {
 				analysis: {
 					analyzer: {
@@ -103,16 +104,22 @@ class Revisions {
 				l.error("Failed to create mapping for revision.");
 				l.error(err);
 			});
-		});*/
+		});
 	}
 
-	save() {
-		this.models.forEach((revision) => {
+	create() {
+		// Sort revisions by date asc
+		/*this.models.sort(function (a, b) {
+			return new Date(b.Entered) < new Date(a.Entered);
+		});*/
+
+		// Save them sequentially
+		return Promise.all(this.models.map((revision) => {
 			var id = revision._id;
 			delete revision._id;
 
-			new Revision(revision, id).save();
-		});
+			return stateOrm.index(revision, id);
+		}));
 	}
 }
 

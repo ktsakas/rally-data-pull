@@ -23,10 +23,6 @@ class SnapshotFormatter extends FormatBase {
 			this.obj.Exited = null;
 		}
 
-		if (this.obj.Story.ID == 59466256565 && this.obj.Exited == null) {
-			l.debug("found one: ", this.obj);
-		}
-
 		super.parseDates();
 	}
 

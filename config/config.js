@@ -34,11 +34,11 @@ module.exports = {
 	},
 
 	elastic: {
-		host: "127.0.0.1:9200",//"http://faf61a25.ngrok.io",
-		// host: "localhost:9200",
+		// host: "127.0.0.1:9200",
+		host: "na-testl01.gain.tcprod.local:9200",
 		log: "error",
 
-		index: "fixed",
+		index: "rally",
 
 		types: {
 			webhook: "webhook",
@@ -50,7 +50,8 @@ module.exports = {
 
 	esClient: new elastic.Client({
 		// host: "http://faf61a25.ngrok.io",
-		host: "localhost:9200",
+		host: "na-testl01.gain.tcprod.local:9200",
+		// host: "localhost:9200",
 		log: "error",
 	})
 };

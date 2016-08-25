@@ -45,7 +45,7 @@ class RallyPull {
 
 				return Promise.all(proms)
 					.then(() => {
-						l.debug("res: ", res.Results.length);
+						// l.debug("res: ", res.Results.length);
 						return res.Results;
 					});
 			});
@@ -67,8 +67,8 @@ class RallyPull {
 						// l.debug("saved: ", snapshots);
 						return new Revisions(snapshots).create();
 					});
-			});
-			// .then(historyProgress.tick);
+			})
+			.then(historyProgress.tick);
 	}
 
 	static pullArtifacts (start, pagesize) {
@@ -165,10 +165,10 @@ class RallyPull {
 	}
 }
 
-// RallyPull.pullAll();
-RallyPull.pullHistory({
+RallyPull.pullAll();
+/*RallyPull.pullHistory({
 	ObjectID: 14504494816,
 	FormattedID: "random"
-}, config.rally.workspaceID);
+}, config.rally.workspaceID);*/
 
 module.exports = RallyPull;

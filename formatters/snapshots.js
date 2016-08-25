@@ -55,18 +55,19 @@ class SnapshotsFormatter {
 				var revisions = [];
 
 				this.obj.forEach((snapshot) => {
-					var revision = snapshot.obj,
-						id = revision._id;
-					delete revision._id;
+					var revision = snapshot.obj;
 
 					if ( snapshot.hasTrackedFields() ) {
 						// If there is a previous revision update it's exited date
 						if (revisions.length > 0) {
 							revisions[ revisions.length - 1 ].Exited = revision.Entered;
 
-							var durationMs =
-								new Date(this.obj.Exited).getTime() - new Date(this.obj.Entered).getTime();
-							revisions[ revisions.length - 1 ].DurationDays = durationMs / 1000 / 60 / 60 / 24;
+							var prevRev = revisions[ revisions.length - 1 ],
+								msInRevision = new Date(prevRev.Exited).getTime() - new Date(prevRev.Entered).getTime(),
+								daysInRevision = msInRevision / 1000 / 60 / 60 / 24;
+
+							revisions[ revisions.length - 1 ].DaysUntilExit = daysInRevision;
+							revision.DaysInPreviousRevision = daysInRevision;
 						}
 
 						revisions.push(revision);

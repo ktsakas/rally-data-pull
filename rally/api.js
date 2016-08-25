@@ -5,7 +5,7 @@ var config = require('../config/config'),
 	Promise = require('bluebird'),
 	assert = require('assert'),
 	rp = require('../wrapped-request').defaults({
-		timeout: 20000,
+		timeout: 30000,
 		auth: {
 			user: config.rally.user,
 			pass: config.rally.pass,

@@ -1,8 +1,8 @@
 {
 	"Entered": "date",
 	"Exited": "date",
-	"DurationDays": "float",
-
+	"DaysUntilExit": "float",
+	"DaysInPreviousState": "float",
 
 	"Story": {
 		"ID": "long",
@@ -71,6 +71,10 @@
 	},
 	"LastUpdateDate": "date",
 	"Region": "string",
+	"ResolutionReason": {
+		"type": "string",
+		"null_value": "N/A"
+	},
 	"SalesforceCase": "string",
 	"SalesforcePriority": {
 		"type": "string",
@@ -83,6 +87,10 @@
 	"Tags": {
 		"type": "string",
 		"null_value": []
+	},
+	"TicketType": {
+		"type": "string",
+		"null_value": "N/A"
 	},
 	"TotalPosts": "long",
 	"Owner": "long",

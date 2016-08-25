@@ -11,7 +11,11 @@
 		"api": "PRODUCED PROGRAMMATICALLY BY LOOKING AT THE PREVIOUS ENTERED FIELD",
 		"hook": "PRODUCED PROGRAMMATICALLY BY LOOKING AT THE PREVIOUS ENTERED FIELD"
 	},
-	"DurationDays": {
+	"DaysUntilExit": {
+		"api": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED",
+		"hook": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED"
+	},
+	"DaysInPreviousRevision": {
 		"api": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED",
 		"hook": "PRODUCED BY DIFFERENCE OF ENTERED FROM EXITED"
 	},
@@ -137,6 +141,14 @@
 	"LastUpdateDate": {
 		"api": "LastUpdateDate",
 		"hook": "state.LastUpdateDate.value"
+	},
+	"ResolutionReason": {
+		"api": "c_ResolutionReason",
+		"hook": "state.c_ResolutionReason.value"
+	},
+	"TicketType": {
+		"api": "c_TicketType",
+		"hook": "state.c_TicketType.value"
 	},
 	"SalesforceCase": {
 		"api": "c_SalesforceCase",

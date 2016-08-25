@@ -21,7 +21,7 @@ function WrappedRequest (req) {
 
 WrappedRequest.rateLimitedRequest = function (req) {
 	var job = function () {
-		if (cache && req.method == 'GET') {
+		if (cache && req.method == 'GET') {		
 			return WrappedRequest.cachedRequest(req);
 		} else {
 			return WrappedRequest.repeatOnErrorRequest(req);
@@ -31,27 +31,34 @@ WrappedRequest.rateLimitedRequest = function (req) {
 	return Promise.promisify(requestQueue.push)(job);
 }
 
-WrappedRequest.repeatOnErrorRequest = function (req) {	
+WrappedRequest.repeatOnErrorRequest = function (req) {
 	return rp(req)
 
-		// Try the request again on error
+		// Try the request again on any error
+		.catch((err) => rp(req))
+
+		// Try a second time if ETIMEDOUT
 		.catch((err) => {
-			return rp(req);
+			if (err.message === 'Error: ETIMEDOUT') return rp(req);
+			else throw err;
 		})
 
-		// If you fail twice exit the program
-		.catch((err) => {
+		// If you fail 3 times exit the program
+		.catch((err, resp) => {
 			if (err.message === 'Error: ETIMEDOUT') {
+				l.debug(req);
 				l.error("Connection timedout twice. Exiting...");
+
 				process.exit(1);
 			} else {
+				l.error(err);
 				throw err;
 			}
 		});
 };
 
 var count = 0;
-WrappedRequest.cachedRequest = function (req) {	
+WrappedRequest.cachedRequest = function (req) {
 	// File path for cached response
 	var queryURL = req.uri + "?" + queryString.unescape(queryString.stringify(req.qs)),
 		fileName = crypto.createHash('md5').update(queryURL).digest('hex'),
@@ -77,6 +84,7 @@ WrappedRequest.cachedRequest = function (req) {
 				return WrappedRequest
 					.repeatOnErrorRequest(req)
 					.then((res) => {
+
 						if (typeof res != "object") {
 							l.error("Response is not an object.");
 							l.error(req, res);
@@ -112,5 +120,30 @@ WrappedRequest.defaults = function (options) {
 	rp = rp.defaults(options);
 	return WrappedRequest;
 };
+
+/*wrapReq = WrappedRequest.defaults({
+		timeout: 10000,
+		auth: {
+			user: config.rally.user,
+			pass: config.rally.pass,
+			sendImmediately: false
+		},
+		cache: true,
+		json: true
+	});
+
+wrapReq({ method: 'GET',
+  uri: 'https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/6692415259/artifact/snapshot/query.js',
+  qs:
+   { pagesize: 100,
+     start: 0,
+     find: '{"ObjectID":60710101388}',
+     fields: true,
+     hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]' }
+}).then((res) => {
+	l.debug("res: ", res);
+}).catch((err) => {
+	l.debug("err: ", err);
+});*/
 
 module.exports = WrappedRequest;

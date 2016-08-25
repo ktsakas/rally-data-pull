@@ -18,15 +18,11 @@ var config = require("../config/config"),
 	RallyAPI = require('./api');
 
 class RallyWebhooks {
-	constructor(projectID) {
-		this.projectID = projectID;
+	constructor(projectIDs) {
+		this.projectIDs = projectIDs;
 	}
 
-	runServer() {
-
-	}
-
-	getProjectChildren (projectID) {
+	/*getProjectChildren (projectID) {
 		var projectChildrenURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/Project/' + projectID + '/Children';
 
 		return new rp({ method: 'GET', uri: projectChildrenURL })
@@ -68,37 +64,43 @@ class RallyWebhooks {
 			});
 	}
 
-	create (projectID) {
-		projectID = projectID || this.projectID;
+	getProjectsDescendants (projectIDs) {
+		// Pull the descendants for all projects
+		return Promise.all(
+				projectIDs
+				.map((projectID) => this.getProjectDescendants(projectID))
+		// And flatten the resulting array
+			).then((descendants) => descendants.reduce((a, b) => a.concat(b), []));
+	}
 
-		this.getProjectDescendants(projectID)
+	create (projectIDs) {
+		projectIDs = projectIDs || this.projectIDs;
+
+		this.getProjectsDescendants(projectIDs)
 			.then((descendants) => {
 				l.debug("descendants: ", descendants);
 
-				return Promise.all(descendants
-					.map((project) => {
-						l.debug("Project name: ", project.Name);
+				var proms = descendants.map((project) => {
+					return new rp({
+						method: 'POST',
+						url: 'https://rally1.rallydev.com/notifications/api/v2/webhook',
+						body: {
+							AppName: "Customer Support Dashboard",
+							AppUrl: "http://ad5e6996.ngrok.io",
+							Name: project.Name + " Hook",
+							TargetUrl: "http://ad5e6996.ngrok.io",
+							Expressions: [{
+								Value: project.UUID,
+								Operator: "project"
+							}]
+						}
+					});
+				});
 
-						return new rp({
-							method: 'POST',
-							url: 'https://rally1.rallydev.com/notifications/api/v2/webhook',
-							body: {
-								AppName: "Customer Support Dashboard",
-								AppUrl: "http://ad5e6996.ngrok.io",
-								Name: project.Name + " Hook",
-								TargetUrl: "http://ad5e6996.ngrok.io",
-								Expressions: [{
-									Value: project.ObjectUUID,
-									Operator: "project"
-								}]
-							}
-						})
-					}));
+				return Promise.all(proms);
 			})
 			.then((hooks) => {
-				var hookIDs = hooks.map((hook) => {
-					return hook.ObjectUUID;
-				});
+				var hookIDs = hooks.map((hook) => hook.ObjectUUID);
 
 				// Store hook ids in file
 				fs.writeFileSync(webhookIdsFilePath, JSON.stringify(hookIDs), 'utf8');
@@ -106,7 +108,7 @@ class RallyWebhooks {
 	}
 
 	remove () {
-		var hookIDs = JSON.parse(webhookIdsFilePath, 'utf8');
+		var hookIDs = JSON.parse(fs.readFileSync(webhookIdsFilePath, 'utf8'));
 
 		// Send delete requests for all webhooks
 		return Promise.all(hookIDs.map((hookID) => {
@@ -125,19 +127,36 @@ class RallyWebhooks {
 		})).then((_) => {
 			fs.writeFileSync(webhookIdsFilePath, '[]', 'utf8');
 		});
-	}
+	}*/
 
 	format (hookObj) {
 
 	}
 }
 
-/*var rallyHooks = new RallyWebhooks(22560124149);
+var rallyHooks = new RallyWebhooks([6716826537, 9053047572, 16781760883]);
 
-rallyHooks
+return new rp({
+	method: 'POST',
+	url: 'https://rally1.rallydev.com/notifications/api/v2/webhook',
+	body: {
+		AppName: "Customer Support Dashboard",
+		AppUrl: "https://requestb.in/14u9oxq1",
+		Name: "Rally Integration Webhook",
+		TargetUrl: "https://requestb.in/14u9oxq1",
+		Expressions: [{
+			AttributeID: null,
+			AttributeName: "Workspace",
+			Operator: "=",
+			Value: "b03e6b6f-0641-4a50-9490-c7a37d8e87a0"
+		}]
+	}
+});
+
+/*rallyHooks
 	.remove()
 	.then(() => {
-		rallyHooks.create();
+		// rallyHooks.create();
 	});*/
 
 module.exports = RallyWebhooks;

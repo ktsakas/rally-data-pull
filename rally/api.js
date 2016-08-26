@@ -161,7 +161,7 @@ class RallyAPI {
 		return rp(options)
 			.then((res) => res.QueryResult.TotalResultCount)
 			.catch((err) => {
-				if (err.response.statusCode == 401) {
+				if (err.response && err.response.statusCode == 401) {
 					l.error("Failed to authenticate with credentials: ", config.rally.user, config.rally.pass);
 					process.exit(1);
 				}

@@ -5,7 +5,7 @@ var config = require("../config/config"),
 	testObj = JSON.parse(fs.readFileSync('trash/revisions.json', 'utf8')),
 	RallyAPI = require('../rally/api'),
 	SnapshotFormatter = require('./snapshot'),
-	deepAssign = require('deep-assign');;
+	deepAssign = require('deep-assign');
 
 class SnapshotsFormatter {
 	constructor (obj) {
@@ -15,10 +15,8 @@ class SnapshotsFormatter {
 		this.obj = obj;
 	}
 
-	addFormattedID (formattedID) {
-		this.obj.forEach((snapshot, i) => {
-			this.obj[i].FormattedID = formattedID;
-		});
+	append (object) {
+		this.obj = this.obj.map((snapshot) => deepAssign({}, object, snapshot));
 
 		return this;
 	}
@@ -35,7 +33,7 @@ class SnapshotsFormatter {
 
 	formatSnapshots () {
 		var self = this,
-			proms = self.obj.map((snapshot, i) => {
+			proms = this.obj.map((snapshot, i) => {
 				return new SnapshotFormatter(snapshot)
 					.formatSnapshot()
 					.then((snapshot) => {

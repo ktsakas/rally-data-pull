@@ -8,8 +8,7 @@ var express = require("express"),
 
 // Import models
 var WebhookFormatter = require('./formatters/webhook'),
-	Webhook = require('./rally/webhooks'),
-	Revisions = require('./models/revision');
+	Revision = require('./models/revision');
 
 app.use(bodyParser.json())
    .use(bodyParser.urlencoded({ extended: false }));
@@ -22,11 +21,23 @@ app.use(bodyParser.json())
  */
 app.post('/webhook', function (req, res) {
 
+
 	new WebhookFormatter(req.body.message)
 		.formatWebhook()
 		.then((hook) => {
+			if (hook.Story.Type == "L3/Salesforce") {
+				return new Revision(hook).save();
+			} else {
+				l.debug("Change in non L3/Salesforce ticket not saving...")
+				return Promise.resolve(hook);
+			}		
+		})
+		.then((hook) => {
 			// Respond with the stored webhook
 			res.json(hook);
+		})
+		.catch((err) => {
+			l.error("Failed to save hook ", err);
 		});
 
 });

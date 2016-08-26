@@ -5,7 +5,7 @@ var config = require("../config/config"),
 	stateOrm = new ElasticOrm(
 		config.esClient,
 		config.elastic.index,
-		config.elastic.types.revision
+		config.elastic.type
 	);
 
 var fs = require('fs'),
@@ -118,7 +118,10 @@ class Revisions {
 			var id = revision._id;
 			delete revision._id;
 
-			return stateOrm.index(revision, id);
+			return stateOrm.index(revision, id)
+					.catch((err) => {
+						l.debug("Failed to store revisions for " + revision.Story.ID + ". ", revision, err);
+					});;
 		}));
 	}
 }

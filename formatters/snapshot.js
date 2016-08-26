@@ -19,6 +19,19 @@ class SnapshotFormatter extends FormatBase {
 	}
 
 	parseDates () {
+		// Ensure dates are in ISO format
+		// NOTE: dates sometimes use a different format for different timezones
+		if ( this.obj.Iteration ) {
+			this.obj.Iteration.StartDate = new Date(this.obj.Iteration.StartDate).toISOString();
+			this.obj.Iteration.EndDate = new Date(this.obj.Iteration.EndDate).toISOString();
+		}
+
+		if ( this.obj.Release ) {
+			this.obj.Release.StartDate = new Date(this.obj.Release.StartDate).toISOString();
+			this.obj.Release.ReleaseDate = new Date(this.obj.Release.ReleaseDate).toISOString();
+		}
+
+		// Set exited date to NULL if the year is 8098
 		if ( new Date(this.obj.Exited).getYear() == 8098 ) {
 			this.obj.Exited = null;
 		}

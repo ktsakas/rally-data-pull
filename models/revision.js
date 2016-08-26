@@ -6,7 +6,7 @@ var config = require("../config/config"),
 	stateOrm = new ElasticOrm(
 		config.esClient,
 		config.elastic.index,
-		config.elastic.types.revision
+		config.elastic.type
 	);
 
 var fs = require('fs'),
@@ -50,11 +50,8 @@ class Revision {
 			{ term: { "Story.ID": this.model.Story.ID } },
 			{ missing: { "field": "Exited" } }
 		]).then((result) => {
-			console.log("trying to find: ", this.model.Story.ID, result.hits.hits[0]);
-
-
 			return (result.hits.total == 0) ? null :
-					new Revision(result.hits.hits[0]);
+					new Revision(result.hits.hits[0]._source, result.hits.hits[0]._id);
 		});
 	}
 
@@ -114,22 +111,21 @@ class Revision {
 					return stateOrm
 						.index(self.model, self._id)
 						.then((res) => {
-							l.debug("done!", res);
-							
+							// l.debug("New revision saved successfully.");
+
 							if (!latestRevision)
-								return;
+								return self.model;
 							else
-								return latestRevision.setExited(self.model.Entered);
+								return latestRevision.setExited(self.model.Entered).then(() => self.model);
+						})
+						.catch((err) => {
+							l.error("Failed to insert new revision to elastic. ", err);
 						});
 					
 
 				// Otherwise only update the fields
-				} else {
-					l.debug("update");
-					l.debug("latest: ", latestRevision);
-
+				} else if (latestRevision) {
 					// Assert that the previous revision is valid
-					assert(latestRevision);
 					assert(latestRevision.hasTrackedFields());
 
 					// Do not change the state enter and exit times
@@ -137,7 +133,12 @@ class Revision {
 					delete self.model.Entered;
 					delete self.model.Exited;
 
-					return latestRevision.update(self.model);
+					return latestRevision.update(self.model).then(() => self.model);
+				} else {
+					l.warn("Could not find previous revision for " + self.model.Story.ID + " when inserting from hook." +
+						" An initial revision should usually be present.");
+
+					return Promise.resolve(self.model);
 				}
 			});
 	}

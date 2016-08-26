@@ -46,8 +46,8 @@ class WebhookFormatter extends FormatBase {
 	}
 }
 
-new WebhookFormatter(testObj.message).formatWebhook().then((revision) => {
+/*new WebhookFormatter(testObj.message).formatWebhook().then((revision) => {
 	l.debug(revision);
-});
+});*/
 
 module.exports = WebhookFormatter;

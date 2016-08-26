@@ -141,9 +141,9 @@ return new rp({
 	url: 'https://rally1.rallydev.com/notifications/api/v2/webhook',
 	body: {
 		AppName: "Customer Support Dashboard",
-		AppUrl: "https://requestb.in/14u9oxq1",
+		AppUrl: config.webhookURL,
 		Name: "Rally Integration Webhook",
-		TargetUrl: "https://requestb.in/14u9oxq1",
+		TargetUrl: config.webhookURL,
 		Expressions: [{
 			AttributeID: null,
 			AttributeName: "Workspace",
@@ -151,6 +151,8 @@ return new rp({
 			Value: "b03e6b6f-0641-4a50-9490-c7a37d8e87a0"
 		}]
 	}
+}).then((res) => {
+	l.debug(res);
 });
 
 /*rallyHooks

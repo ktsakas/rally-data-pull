@@ -16,6 +16,7 @@ module.exports = {
 	debug: true,
 	logger: logger,
 	port: process.env.PORT || 3000,
+	webhookURL: "http://bda44ca1.ngrok.io/webhook",
 
 	rally: {
 		user: process.env.USER,
@@ -38,14 +39,8 @@ module.exports = {
 		host: "127.0.0.1:9200",
 		log: "error",
 
-		index: "rally",
-
-		types: {
-			webhook: "webhook",
-			raw_artifact: "raw_artifact",
-			artifact: "artifact",
-			revision: "revision"
-		}
+		index: "fixed",
+		type: "revision"
 	},
 
 	esClient: new elastic.Client({

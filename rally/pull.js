@@ -12,6 +12,7 @@ var assert = require('assert'),
 	async = require('async');
 
 var RallyAPI = require("./api"),
+	FormatUtils = require("../formatters/utils"),
 	SnapshotsFormatter = require('../formatters/snapshots');
 
 
@@ -43,17 +44,13 @@ class RallyPull {
 					);
 				}
 
-				return Promise.all(proms)
-					.then(() => {
-						// l.debug("res: ", res.Results.length);
-						return res.Results;
-					});
+				return Promise.all(proms).then(() => res.Results);
 			});
 	}
 
 	static pullHistory (artifact, workspaceID) {
 		return RallyPull
-			.pullRevisions(artifact.ObjectID, workspaceID)
+			.pullRevisions(artifact.Story.ID, workspaceID)
 			.then((results) => {
 				if (results.length == 0) {
 					// l.warn("No revisions in story: " + artifact.ObjectID);
@@ -61,10 +58,9 @@ class RallyPull {
 				}
 
 				return new SnapshotsFormatter(results)
-					.addFormattedID(artifact.FormattedID)
+					.append(artifact)
 					.getRevisions()
 					.then((snapshots) => {
-						// l.debug("saved: ", snapshots);
 						return new Revisions(snapshots).create();
 					});
 			})
@@ -77,34 +73,22 @@ class RallyPull {
 		return RallyAPI
 			.getArtifacts(start, 200)
 			.then((response) => {
-				var end = Math.min(start + PAGESIZE, totalArtifacts);
+				assert(response.Results);
 
-				if (!response.Results) {
-					l.debug("Should never reach here.");
-					return response;
-				}
+				var end = Math.min(start + PAGESIZE, totalArtifacts);
 
 				fetchProgress.tick(PAGESIZE);
 
-				return response.Results.map((result) => {
-					return {
-						ObjectID: result.ObjectID,
-						FormattedID: result.FormattedID
-					}
-				});
+				return response.Results.map((result) => FormatUtils.format(result, 'api'));
 			}).then((artifacts) => {
-				if (60882613871 in artifacts) {
-					l.debug("whatever\n");
-				}
-
 				return Promise.all(artifacts.map((artifact) => {
-					RallyPull.pullHistory(artifact, config.rally.workspaceID);
+					return RallyPull.pullHistory(artifact, config.rally.workspaceID);
 				}));
 			});
 	}
 
 	static pullAll () {
-		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.types.artifact + " ...");
+		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.type + " ...");
 
 		Promise
 			.resolve([
@@ -166,9 +150,5 @@ class RallyPull {
 }
 
 RallyPull.pullAll();
-/*RallyPull.pullHistory({
-	ObjectID: 14504494816,
-	FormattedID: "random"
-}, config.rally.workspaceID);*/
 
 module.exports = RallyPull;

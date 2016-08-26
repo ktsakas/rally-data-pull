@@ -1,15 +1,12 @@
 var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
-	translation = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),
 	tracked = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8')),
 	testObj = JSON.parse(fs.readFileSync('trash/test-obj.json', 'utf8')),
-	RallyAPI = require('../rally/api');
+	RallyAPI = require('../rally/api'),
+	FormatUtils = require('./utils');
 
 const assert = require('assert');
-
-var flatten = require('flat'),
-	unflatten = flatten.unflatten;
 
 class FormatBase {
 	constructor (obj) {
@@ -30,28 +27,25 @@ class FormatBase {
 	format (mode) {
 		assert(mode, "Missing mode argument.");
 
-		this.flatten()
-			.renameFields(mode)
-			.removeUnused()
-			.nullMissingFields()
-			.unflatten()
-			.addDummyData()
+		this.obj = FormatUtils.format(this.obj, mode);
+
+		this.addDummyData()
 			.addStatus();
 
 		var proms = [];
 		proms.push( this.addProjectHierarchy() );
 		proms.push( this.addTagNames() );
-		proms.push( this.addDiscussionCount() );
+		proms.push( this.addDiscussionCount() );		
 
 		return Promise.all(proms).then(() => this.obj);
 	}
 
-	addProjectHierarchy (projectID) {
+	addProjectHierarchy (projectUUID) {
 		var self = this;
-		projectID = projectID || this.obj.Project.ID;
+		projectUUID = projectUUID || this.obj.Project.UUID;
 
 		return RallyAPI
-			.getProject(projectID)
+			.getProject(projectUUID)
 			.then((project) => {
 				if (!this.obj.ProjectHierarchy) this.obj.ProjectHierarchy = [];
 				self.obj.ProjectHierarchy.push(project._refObjectName);
@@ -132,31 +126,6 @@ class FormatBase {
 		return this;
 	}
 
-	nullMissingFields () {
-		for (var field in this.obj) {
-			if ( typeof this.obj[ field ] == "undefined" && tracked.indexOf(field) == -1 ) {
-				this.obj[ field ] = null;
-			}
-		}
-
-		return this;
-	}
-
-	renameFields (mode) {
-		assert(mode, "Missing mode argument.");
-
-		for (var newName in translation) {
-			var fieldName = translation[newName][mode];
-
-			if ( typeof this.obj[fieldName] != "undefined" && fieldName != newName ) {
-				this.obj[newName] = this.obj[fieldName];
-				delete this.obj[fieldName];
-			}
-		}
-
-		return this;
-	}
-
 	// This is overriden by child classes
 	parseDates () {
 		/*var Entered = this.obj.Entered,
@@ -173,50 +142,20 @@ class FormatBase {
 
 		return this;
 	}
-
-	removeUnused () {
-		var usedFields = Object.keys(translation);
-		// l.debug("used fields: ", usedFields);
-
-		for (var fieldName in this.obj) {
-			if ( usedFields.indexOf(fieldName) == -1 )
-				delete this.obj[fieldName];
-		}
-
-		return this;
-	}
-
-	// TODO: implement these to be in place
-	flatten (obj) {
-		this.obj = flatten(this.obj, { safe: true });
-
-		return this;
-	}
-
-	unflatten (obj) {
-		this.obj = unflatten(this.obj);
-
-		return this;
-	}
 }
 
-var formatter = new FormatBase(testObj);
-
-formatter.flatten();
+/*var testObj = FormatUtils.flatten(testObj);
 // l.debug( "flattened obj: ", formatter.obj );
 
-formatter.renameFields('api');
+testObj = FormatUtils.renameFields(testObj, 'api');
 // l.debug( "renamed fields: ", formatter.obj );
 
-formatter.removeUnused();
+testObj = FormatUtils.removeUnused(testObj);
 // l.debug( "removed unused: ", formatter.obj );
 
-formatter.parseDates();
-// l.debug( "parsed custom: ", formatter.obj );
 
-
-testObj = formatter.unflatten();
-// l.debug( "unflattened obj: ", formatter.obj );
+testObj = FormatUtils.unflatten(testObj);*/
+// l.debug( "unflattened obj: ", testObj );
 // l.debug( "keys: ", Object.keys(formatter.obj) );
 
 module.exports = FormatBase;

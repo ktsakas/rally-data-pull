@@ -16,14 +16,14 @@
 
 	"Iteration": {
 		"Name": "string",
-		"ObjectID": "long",
+		"UUID": "string",
 		"StartDate": "date",
 		"EndDate": "date"
 	},
 
 	"Release": {
 		"Name": "string",
-		"ObjectID": "long",
+		"UUID": "string",
 		"StartDate": "date",
 		"ReleaseDate": "date"
 	},
@@ -31,7 +31,7 @@
 	"ProjectHierarchy": "string",
 
 	"Project": {
-		"ID": "long",
+		"UUID": "string",
 		"Name": "string"
 	},
 
@@ -93,7 +93,7 @@
 		"null_value": "N/A"
 	},
 	"TotalPosts": "long",
-	"Owner": "long",
+	"Owner": "string",
 	"Author": "string",
 
 	"PrevScheduleState": {

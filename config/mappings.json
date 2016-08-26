@@ -30,7 +30,7 @@
 		"hook": "state.ObjectUUID.value"
 	},
 	"Story.FormattedID": {
-		"api": "FormattedID",
+		"api": "FIELD IS ADDED FROM INITIAL ARTIFACT FETCH",
 		"hook": "state.FormattedID.value"
 	},
 	"Story.Name": {
@@ -55,8 +55,8 @@
 		"api": "Iteration.Name",
 		"hook": "state.Iteration.value.name"
 	},
-	"Iteration.ID": {
-		"api": "Iteration.ObjectID",
+	"Iteration.UUID": {
+		"api": "Iteration._refObjectUUID",
 		"hook": "state.Iteration.value.id"
 	},
 	"Iteration.StartDate": {
@@ -73,8 +73,8 @@
 		"api": "Release.Name",
 		"hook": "TODO"
 	},
-	"Release.ID": {
-		"api": "Release.ObjectID",
+	"Release.UUID": {
+		"api": "Release._refObjectUUID",
 		"hook": "TODO"
 	},
 	"Release.StartDate": {
@@ -91,8 +91,8 @@
 		"api": "CUSTOM FIELD",
 		"hook": "CUSTOM FIELD"
 	},
-	"Project.ID": {
-		"api": "Project.ObjectID",
+	"Project.UUID": {
+		"api": "Project._refObjectUUID",
 		"hook": "state.Project.value.id"
 	},
 	"Project.Name": {
@@ -175,7 +175,7 @@
 		"hook": "CUSTOM PROPERTY PRODUCED FROM SEPARATE REQUEST"
 	},
 	"Owner": {
-		"api": "Owner",
+		"api": "TODO GET OWNER NAME INSTEAD OF ID",
 		"hook": "state.Owner.value.name"
 	},
 	"Author": {

@@ -1,4 +1,18 @@
 
+## BUGS
+Missing revisions entirely for some artifacts.
+Some revisions are missing the UUID.
+Normal API returns integer ID, while webhook API returns UUID.
+Revision dates usually come in ISO format, but sometimes use a different format (depending on the timezone Eastern Daylight vs Eastern Standard).
+Elastic search is near real time.
+
+## DID
+Talked to person from customer support.
+
+## CHANGES TO DASH
+Keep using graphs for filters but only update the ticket table.
+Remove filters from top and show them on the table.
+
 ## UNDOCUMENTED
 * The limit for production link seems to be 2000 and sandbox is 200.
 * If you get all artifacts it will default to a workspace so, to get all artifacts from another workspace you need to add a parameter.

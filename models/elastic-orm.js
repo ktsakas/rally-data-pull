@@ -203,10 +203,7 @@ class ElasticOrm {
 			}
 		};
 
-		return this.esClient.search(params).then((res) => {
-			l.debug("search res: ", res);
-			return res;
-		});
+		return this.esClient.search(params);
 	}
 
 	typeExists(type) {

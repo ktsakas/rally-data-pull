@@ -10,13 +10,15 @@ var elastic = require('elasticsearch'),
 		transports: [
 			new (winston.transports.Console)({ prettyPrint: true, level: 'silly' })
 		]
-	})
+	}),
+	host = process.env.PROD ? "na-testl01.gain.tcprod.local" : "127.0.0.1";
+
 
 module.exports = {
 	debug: true,
 	logger: logger,
 	port: process.env.PORT || 3000,
-	webhookURL: "http://bda44ca1.ngrok.io/webhook",
+	webhookURL: host + ":3000/webhook",
 
 	rally: {
 		user: process.env.USER,
@@ -25,18 +27,19 @@ module.exports = {
 		server: "https://rally1.rallydev.com",
 
 		workspaceID: 6692415259,// 5339961604,
+		workspaceUUID: "b03e6b6f-0641-4a50-9490-c7a37d8e87a0",
 
 		// Reservations: 6716826537
 		projectID: 6716826537,
 	},
 
 	kibana: {
-		host: "127.0.0.1:5601"//"http://83684862.ngrok.io"
+		host: host + ":5601"//"http://83684862.ngrok.io"
 	},
 
 	elastic: {
 		// host: "127.0.0.1:9200",
-		host: "127.0.0.1:9200",
+		host: host + ":9200",
 		log: "error",
 
 		index: "fixed",
@@ -44,9 +47,7 @@ module.exports = {
 	},
 
 	esClient: new elastic.Client({
-		// host: "http://faf61a25.ngrok.io",
-		host: "127.0.0.1:9200",
-		// host: "localhost:9200",
+		host: host + ":9200",
 		log: "error",
 	})
 };

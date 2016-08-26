@@ -21,9 +21,9 @@ module.exports = {
 	webhookURL: host + ":3000/webhook",
 
 	rally: {
-		user: process.env.USER,
-		pass: process.env.PASS,
-		apiKey: process.env.APIKEY,
+		user: process.env.RALLY_USER,
+		pass: process.env.RALLY_PASS,
+		apiKey: process.env.RALLY_APIKEY,
 		server: "https://rally1.rallydev.com",
 
 		workspaceID: 6692415259,// 5339961604,

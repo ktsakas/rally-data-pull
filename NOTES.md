@@ -8,6 +8,7 @@ Elastic search is near real time.
 Randomly fails with internal server error (when too many requests), but HTML with wrong status code.
 At days it hits timedout way too often.
 Bad authentication keeps credentials saved for api and works with api it shouldn't.
+Environment variables overshadowed.
 
 ## DID
 Talked to person from customer support.

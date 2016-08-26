@@ -33,13 +33,8 @@ module.exports = {
 		projectID: 6716826537,
 	},
 
-	kibana: {
-		host: host + ":5601"//"http://83684862.ngrok.io"
-	},
-
 	elastic: {
-		// host: "127.0.0.1:9200",
-		host: host + ":9200",
+		host: "127.0.0.1:9200",
 		log: "error",
 
 		index: "fixed",
@@ -47,7 +42,7 @@ module.exports = {
 	},
 
 	esClient: new elastic.Client({
-		host: host + ":9200",
+		host: "127.0.0.1:9200",
 		log: "error",
 	})
 };

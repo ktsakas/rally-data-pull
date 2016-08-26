@@ -4,7 +4,7 @@ var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
 	tracked = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8')),
-	testObj = JSON.parse(fs.readFileSync('trash/test-obj.json', 'utf8')),
+	// testObj = JSON.parse(fs.readFileSync('trash/test-obj.json', 'utf8')),
 	RallyAPI = require('../rally/api'),
 	FormatUtils = require('./utils');
 

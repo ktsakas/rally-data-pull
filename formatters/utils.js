@@ -4,8 +4,7 @@ var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
 	mappings = JSON.parse(fs.readFileSync('config/mappings.json', 'utf8')),
-	tracked = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8')),
-	testObj = JSON.parse(fs.readFileSync('trash/test-obj.json', 'utf8'));
+	tracked = JSON.parse(fs.readFileSync('config/tracked.json', 'utf8'));
 
 const assert = require('assert');
 

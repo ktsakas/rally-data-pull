@@ -3,7 +3,7 @@
 var config = require("../config/config"),
 	l = config.logger,
 	fs = require('fs'),
-	testObj = JSON.parse(fs.readFileSync('trash/revisions.json', 'utf8')),
+	// testObj = JSON.parse(fs.readFileSync('trash/revisions.json', 'utf8')),
 	RallyAPI = require('../rally/api'),
 	FormatBase = require('./base');
 

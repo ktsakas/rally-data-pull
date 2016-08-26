@@ -163,8 +163,11 @@ class RallyAPI {
 			.catch((err) => {
 				if (err.response && err.response.statusCode == 401) {
 					l.error("Failed to authenticate with credentials: ", config.rally.user, config.rally.pass);
-					process.exit(1);
+				} else {
+					l.error("Could not connect to api.", err);
 				}
+					
+				process.exit(1);
 			});
 	}
 }

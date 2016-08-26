@@ -15,6 +15,7 @@
     "flat": "^2.0.1",
     "http-proxy": "^1.14.0",
     "moment": "^2.14.1",
+    "multi-progress": "^2.0.0",
     "progress": "^1.1.8",
     "rally": "^0.2.0",
     "request-promise": "^4.0.2",

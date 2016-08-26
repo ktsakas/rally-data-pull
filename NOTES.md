@@ -5,6 +5,9 @@ Some revisions are missing the UUID.
 Normal API returns integer ID, while webhook API returns UUID.
 Revision dates usually come in ISO format, but sometimes use a different format (depending on the timezone Eastern Daylight vs Eastern Standard).
 Elastic search is near real time.
+Randomly fails with internal server error (when too many requests), but HTML with wrong status code.
+At days it hits timedout way too often.
+Bad authentication keeps credentials saved for api and works with api it shouldn't.
 
 ## DID
 Talked to person from customer support.

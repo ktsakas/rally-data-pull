@@ -4,7 +4,6 @@ var config = require('./config/config'),
 	l = config.logger,
 	Promise = require('bluebird'),
 	rp = require('request-promise'),
-	// rp = require('request'),
 	fs = Promise.promisifyAll(require('fs')),
 	queryString = require('querystring'),
 	sanitize = require("sanitize-filename"),
@@ -123,7 +122,7 @@ WrappedRequest.defaults = function (options) {
 	return WrappedRequest;
 };
 
-/*wrapReq = WrappedRequest.defaults({
+/*var wrapReq = WrappedRequest.defaults({
 		timeout: 10000,
 		auth: {
 			user: config.rally.user,
@@ -144,8 +143,6 @@ wrapReq({ method: 'GET',
      hydrate: '["Project","Release","Iteration","ScheduleState","_PreviousValues.ScheduleState"]' }
 }).then((res) => {
 	l.debug("res: ", res);
-}).catch((err) => {
-	l.debug("err: ", err);
 });*/
 
 module.exports = WrappedRequest;

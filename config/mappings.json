@@ -30,8 +30,8 @@
 		"hook": "state.ObjectUUID.value"
 	},
 	"Story.FormattedID": {
-		"api": "FIELD IS ADDED FROM INITIAL ARTIFACT FETCH",
-		"hook": "state.FormattedID.value"
+		"api": "FormattedID",
+		"hook": "state.FormattedTID.value"
 	},
 	"Story.Name": {
 		"api": "Name",

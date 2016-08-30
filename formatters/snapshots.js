@@ -19,7 +19,7 @@ class SnapshotsFormatter {
 
 	append (object) {
 		this.obj = this.obj.map((snapshot) => deepAssign({}, object, snapshot));
-
+		
 		return this;
 	}
 

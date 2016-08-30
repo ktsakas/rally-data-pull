@@ -14,19 +14,30 @@ var elastic = require('elasticsearch'),
 	host = process.env.PROD ? "na-testl01.gain.tcprod.local" : "127.0.0.1";
 
 
-module.exports = {
+var config = {
 	debug: true,
+
+	// Winston logger
 	logger: logger,
+
+	// Port to run the server that recieves webhooks
 	port: process.env.PORT || 3000,
-	webhookURL: host + ":3000/webhook",
+	
+	// Link to recieve webhooks from Rally
+	webhookURL: host + ":" + config.port + "/webhook",
 
 	rally: {
+		// Rally username
 		user: process.env.RALLY_USER,
+		// Rally password
 		pass: process.env.RALLY_PASS,
+		// Rally api key (used for webhooks)
 		apiKey: process.env.RALLY_APIKEY,
 		server: "https://rally1.rallydev.com",
 
-		workspaceID: 6692415259,// 5339961604,
+		// Workspace ID and UUID to pull the data from
+		// currently those of the TravelClick workspace
+		workspaceID: 6692415259,
 		workspaceUUID: "b03e6b6f-0641-4a50-9490-c7a37d8e87a0",
 
 		// Reservations: 6716826537
@@ -37,12 +48,16 @@ module.exports = {
 		host: "127.0.0.1:9200",
 		log: "error",
 
-		index: "fixed",
+		// ElasticSearch index and typ to store the revisions
+		index: "rally",
 		type: "revision"
 	},
 
+	// ElasticSearch client
 	esClient: new elastic.Client({
-		host: "127.0.0.1:9200",
+		host: config.elastic.host,
 		log: "error",
 	})
 };
+
+module.exports = config;

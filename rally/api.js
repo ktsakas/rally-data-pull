@@ -29,6 +29,11 @@ var workspaceURL = "https://rally1.rallydev.com/slm/webservice/v2.0/workspace/" 
 var cachedUsers = {},
 	cachedProjects = {};
 
+/**
+ * This class is responsible for all calls to the Rally API.
+ * 
+ * Any other class trying to fetch data from a Rally API should use the methods of this class.
+ */
 class RallyAPI {
 	/**
 	 * Get all tags for a given artifact.

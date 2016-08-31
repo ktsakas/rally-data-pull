@@ -10,6 +10,12 @@ var config = require("../config/config"),
 
 const assert = require('assert');
 
+/**
+ * All formatting operations common between the objects fetched from
+ * the Webhook API and objects recieved from webhooks are in this class.
+ *
+ * This is extened by SnapshotFormatter and WebhookFormatter classes.
+ */
 class FormatBase {
 	/**
 	 * Construct a new formatter either for a snapshot returned

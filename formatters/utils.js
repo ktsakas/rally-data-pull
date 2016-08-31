@@ -11,6 +11,9 @@ const assert = require('assert');
 var flatten = require('flat'),
 	unflatten = flatten.unflatten;
 
+/**
+ * Formatting utilities.
+ */
 class FormatUtils {
 	/**
 	 * Removes all fields that do not exist on mappings.json.

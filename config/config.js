@@ -11,20 +11,20 @@ var elastic = require('elasticsearch'),
 			new (winston.transports.Console)({ prettyPrint: true, level: 'silly' })
 		]
 	}),
-	host = process.env.PROD ? "na-testl01.gain.tcprod.local" : "127.0.0.1";
+	host = process.env.PROD ? "na-testl01.gain.tcprod.local" : "127.0.0.1",
+	port = process.env.PORT || 3000;
 
-
-var config = {
+module.exports = {
 	debug: true,
 
 	// Winston logger
 	logger: logger,
 
 	// Port to run the server that recieves webhooks
-	port: process.env.PORT || 3000,
+	port: port,
 	
 	// Link to recieve webhooks from Rally
-	webhookURL: host + ":" + config.port + "/webhook",
+	webhookURL: host + ":" + port + "/webhook",
 
 	rally: {
 		// Rally username
@@ -55,9 +55,7 @@ var config = {
 
 	// ElasticSearch client
 	esClient: new elastic.Client({
-		host: config.elastic.host,
+		host: host,
 		log: "error",
 	})
 };
-
-module.exports = config;

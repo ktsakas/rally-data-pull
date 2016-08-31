@@ -30,6 +30,12 @@ var cachedUsers = {},
 	cachedProjects = {};
 
 class RallyAPI {
+	/**
+	 * Get all tags for a given artifact.
+	 * 
+	 * @param  {integer} artifactID
+	 * @return {promise}
+	 */
 	static getTags (artifactID) {
 		assert(artifactID);
 
@@ -44,6 +50,12 @@ class RallyAPI {
 			});
 	}
 
+	/**
+	 * Get the project details based on the project id.
+	 * 
+	 * @param  {integer} projectID
+	 * @return {promise}
+	 */
 	static getProject (projectID) {
 		assert(projectID);
 
@@ -59,6 +71,13 @@ class RallyAPI {
 			});
 	}
 
+	/**
+	 * Get the user name for a given user id.
+	 * Caches user names in memory after the first fetch.
+	 * 
+	 * @param  {integer} userID
+	 * @return {promise}
+	 */
 	static getUserName (userID) {
 		assert(userID);
 
@@ -79,6 +98,12 @@ class RallyAPI {
 			});
 	}
 
+	/**
+	 * Returns all child projects (the full objects) of a given project.
+	 * 
+	 * @param  {integer} projectID
+	 * @return {promise}
+	 */
 	static getProjectChildren (projectID) {
 		var projectChildrenURL = 'https://rally1.rallydev.com/slm/webservice/v2.0/Project/' + projectID + '/Children';
 
@@ -86,12 +111,26 @@ class RallyAPI {
 			.then((res) => res.QueryResult.Results);
 	}
 
+	/**
+	 * Gets all discussions for a given artifact.
+	 * 
+	 * @param  {integer} artifactID
+	 * @return {promise}
+	 */
 	static getDiscussions (artifactID) {
 		return rp({ method: 'GET', uri: ENDPOINTS.ARTIFACT + artifactID + "/Discussion" })
 			// TODO: fix some requests are giving maintenance error
 			.then((res) => res.QueryResult ? res.QueryResult.Results : []);
 	}
 
+	/**
+	 * Gets revisions(changes) for a given artifact.
+	 * 
+	 * @param  {integer} artifactID
+	 * @param  {integer} workspaceID
+	 * @param  {integer} start	only used for recursion and is optional
+	 * @return {promise}
+	 */
 	static getArtifactRevisions (artifactID, workspaceID, start) {
 		assert(artifactID);
 		assert(workspaceID);
@@ -143,6 +182,12 @@ class RallyAPI {
 		return rp(options).then((res) => res.QueryResult);
 	}
 
+	/**
+	 * Returns the number of artifacts we are trying to fetch the history for.
+	 * Can also be used to ping the Rally server.
+	 * 
+	 * @return {promise} resolves to an integer with the number of artifacts.
+	 */
 	static countArtifacts () {
 		var options = {
 			method: 'GET',

@@ -24,6 +24,16 @@ var totalArtifacts = null,
 	historyProgress;
 
 class RallyPull {
+	/**
+	 * Pulls in the details for all artifacts (no history/revisoins).
+	 *
+	 * Iterates 200 artifacts at a time until all objects for all artifacts have
+	 * been fetched.
+	 * 
+	 * @param  {integer} start
+	 * @param  {integer} pagesize
+	 * @return {promise}
+	 */
 	static pullRevisions(artifactID, workspaceID) {
 		return RallyAPI
 			.getArtifactRevisions(artifactID, workspaceID, 0)
@@ -48,6 +58,13 @@ class RallyPull {
 			});
 	}
 
+	/**
+	 * Formats and stores the revisions pulled by calling pullRevisions into ElasticSearch.
+	 * 
+	 * @param  {object}  artifact
+	 * @param  {integer} workspaceID
+	 * @return {promise}
+	 */
 	static pullHistory (artifact, workspaceID) {
 		return RallyPull
 			.pullRevisions(artifact.Story.ID, workspaceID)
@@ -64,9 +81,20 @@ class RallyPull {
 						return new Revisions(snapshots).create();
 					});
 			})
+			// Update the progress bar
 			.then(historyProgress.tick);
 	}
 
+	/**
+	 * Pulls in the details for all artifacts (no history/revisoins).
+	 *
+	 * Iterates 200 artifacts at a time until all objects for all artifacts have
+	 * been fetched.
+	 * 
+	 * @param  {integer} start
+	 * @param  {integer} pagesize
+	 * @return {promise}
+	 */
 	static pullArtifacts (start, pagesize) {
 		assert(pagesize <= 200);
 
@@ -87,6 +115,9 @@ class RallyPull {
 			});
 	}
 
+	/**
+	 * Use this function to pull in all data for user stories to ElasticSearch.
+	 */
 	static pullAll () {
 		l.info("Indexing Rally data into /" + config.elastic.index + "/" + config.elastic.type + " ...");
 
@@ -131,24 +162,11 @@ class RallyPull {
 				}).then(() => {
 					l.debug("done!");
 				});
-				// fetchQueue.push(1, function (err) {});
-
-				/*var startFetchTime = new Date().getTime();
-				fetchQueue.drain = function () {
-					var endFetchTime = new Date().getTime();
-					console.log("\ntook " + ((endFetchTime - startFetchTime)/1000) + " secs");
-
-					revisionQueue.push(artifacts, function (err) {});
-				};
-
-				revisionQueue.drain = function () {
-					var endFetchTime = new Date().getTime();
-					console.log("\ntook " + ((endFetchTime - startFetchTime)/1000) + " secs");
-				};*/
 			});
 	}
 }
 
+// Pull all the data
 RallyPull.pullAll();
 
 module.exports = RallyPull;

@@ -11,6 +11,12 @@ var config = require("../config/config"),
 const assert = require('assert');
 
 class FormatBase {
+	/**
+	 * Construct a new formatter either for a snapshot returned
+	 * from the Lookback API or from a webhook.
+	 * 
+	 * @param  {object} obj
+	 */
 	constructor (obj) {
 		assert(obj);
 
@@ -42,6 +48,11 @@ class FormatBase {
 		return Promise.all(proms).then(() => this.obj);
 	}
 
+	/**
+	 * Finds a project's ancestors and returns an array with their names.
+	 * 
+	 * @return {promise}
+	 */
 	addProjectHierarchy (projectUUID) {
 		var self = this;
 		projectUUID = projectUUID || this.obj.Project.UUID;
@@ -58,6 +69,11 @@ class FormatBase {
 			});
 	}
 
+	/**
+	 * Adds the tags to a revision.
+	 * 
+	 * @return {promise}
+	 */
 	addTagNames () {
 		return RallyAPI
 			.getTags(this.obj.Story.ID)

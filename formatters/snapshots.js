@@ -9,6 +9,11 @@ var config = require("../config/config"),
 	SnapshotFormatter = require('./snapshot'),
 	deepAssign = require('deep-assign');
 
+/**
+ * Snapshots are all objects as they are fetched from the Lookback API.
+ *
+ * This formatter converts them to revisions that are stored into Elastic.
+ */
 class SnapshotsFormatter {
 	constructor (obj) {
 		assert(obj);
@@ -58,6 +63,11 @@ class SnapshotsFormatter {
 			.then(() => self.obj);
 	}
 
+	/**
+	 * Call this function to format all snapshots to revisions.
+	 * 
+	 * @return {promise}
+	 */
 	getRevisions () {
 		return this
 			.formatSnapshots()

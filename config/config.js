@@ -45,7 +45,7 @@ module.exports = {
 	},
 
 	elastic: {
-		host: "127.0.0.1:9200",
+		host: host + ":9200",
 		log: "error",
 
 		// ElasticSearch index and typ to store the revisions
@@ -55,7 +55,7 @@ module.exports = {
 
 	// ElasticSearch client
 	esClient: new elastic.Client({
-		host: host,
+		host: host + ":9200",
 		log: "error",
 	})
 };

@@ -17,12 +17,22 @@ class SnapshotsFormatter {
 		this.obj = obj;
 	}
 
+	/**
+	 * This is used to inject properties from the Rally Webservice API
+	 * to the results returned by the Lookback API.
+	 * 
+	 * @return {object}
+	 */
 	append (object) {
 		this.obj = this.obj.map((snapshot) => deepAssign({}, object, snapshot));
 		
 		return this;
 	}
 
+	/**
+	 * Use this to validate that the latest state of a story exists in the revisions.
+	 * That means there is a revision, where the Exited date is null.
+	 */
 	existsCurrentSnapshot() {
 		for (var i= 0; i < this.obj.length; i++) {
 			if ( !this.obj[i].Exited ) return true;

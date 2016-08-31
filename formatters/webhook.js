@@ -11,6 +11,12 @@ class WebhookFormatter extends FormatBase {
 		super(hookObj);
 	}
 
+	/**
+	 * Keys in objects recieved from webhooks are the id's of the attributes.
+	 * This function set the keys to the attribute names.
+	 * 
+	 * @return {object}
+	 */
 	fixKeys(state) {
 		var invertKeyName = function (obj) {
 			for (var key in obj) {
@@ -33,11 +39,18 @@ class WebhookFormatter extends FormatBase {
 		super.parseDates();
 	}
 
+	/**
+	 * Runs all formatting operations for an object received from a webhook
+	 * and returns a promise that resolves with a valid ElasticSearch document.
+	 * 
+	 * @return {promise}
+	 */
 	formatWebhook () {
 		var self = this;
 
 		this.fixKeys();
-		return this.format('hook')
+		return this
+			.format('hook')
 			.then(() => {
 				self.parseDates();
 

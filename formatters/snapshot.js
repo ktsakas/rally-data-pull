@@ -12,6 +12,11 @@ class SnapshotFormatter extends FormatBase {
 		super(obj);
 	}
 
+	/**
+	 * Replaces the author ID with the author's name.
+	 * 
+	 * @return {promise}
+	 */
 	hydrateAuthor () {
 		return RallyAPI
 			.getUserName(this.obj.Author)
@@ -41,6 +46,12 @@ class SnapshotFormatter extends FormatBase {
 		super.parseDates();
 	}
 
+	/**
+	 * Runs all formatting operations for an object retrieved from the Lookback API
+	 * and returns a promise that resolves with a valid ElasticSearch document.
+	 * 
+	 * @return {promise}
+	 */
 	formatSnapshot () {
 		var proms = [],
 			self = this;

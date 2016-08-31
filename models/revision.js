@@ -29,6 +29,11 @@ class Revision {
 		this.model = stateObj;
 	}
 
+	/**
+	 * Builds the mapping object for ElasticSearch.
+	 * 
+	 * @return {object}
+	 */
 	static createMapping() {
 		var mapping = {};
 
@@ -45,6 +50,11 @@ class Revision {
 		return mapping;
 	}
 
+	/**
+	 * Returns the most recent revision of a user story in Elastic.
+	 * 
+	 * @return {object}
+	 */
 	findLatestRevision() {
 		return stateOrm.filter([
 			{ term: { "Story.ID": this.model.Story.ID } },
@@ -55,6 +65,11 @@ class Revision {
 		});
 	}
 
+	/**
+	 * Given a revision it checks if has any fields for which we are tracking changes.
+	 * 
+	 * @return {boolean}
+	 */
 	hasTrackedFields() {
 		var fields = Object.keys(this.model);
 		for (var i= 0; i < tracked.length; i++) {
@@ -76,16 +91,32 @@ class Revision {
 		this.update();
 	}
 
+	/**
+	 * Update an exising revision in elastic.
+	 * 
+	 * @return {promise}
+	 */
 	update() {
 		assert(this._id);
 
 		return stateOrm.update(this.model, this._id);
 	}
 
+	/**
+	 * Create a new revision in elastic.
+	 * 
+	 * @return {promise}
+	 */
 	create() {
 		return stateOrm.index(this.model, this._id);
 	}
 
+	/**
+	 * Sets the time a revision exited it's moved to the next one
+	 * and updated the duration that the revision was valid for.
+	 * 
+	 * @param {date} date the date to set exited to
+	 */
 	setExited(date) {
 		this.obj.Exited = date;
 
@@ -96,9 +127,12 @@ class Revision {
 		return this.update();
 	}
 
-	/*
-	NOTE: do not use this when pulling from the API, because ElasticSearch is not consistent
-	 */
+	/**
+	 * Creates a new revision in the database if the revision has fields that we are tracking updates for
+	 * otherwise it just updates the fields of the most recent revision to match the current state of the user story.
+	 *
+	 * NOTE: this is not used when pulling from the API, because ElasticSearch is near real time
+	 **/
 	save() {
 		var self = this;
 

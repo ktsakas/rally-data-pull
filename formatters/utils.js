@@ -12,7 +12,11 @@ var flatten = require('flat'),
 	unflatten = flatten.unflatten;
 
 class FormatUtils {
-
+	/**
+	 * Removes all fields that do not exist on mappings.json.
+	 * 
+	 * @return {object}
+	 */
 	static removeUnused (obj) {
 		var usedFields = Object.keys(mappings);
 		// l.debug("used fields: ", usedFields);
@@ -25,6 +29,12 @@ class FormatUtils {
 		return obj;
 	}
 
+	/**
+	 * Renames the keys of an object from the api,
+	 * based on mappings.json.
+	 * 
+	 * @return {object}
+	 */
 	static renameFields (obj, mode) {
 		assert(mode, "Missing mode argument.");
 
@@ -40,6 +50,11 @@ class FormatUtils {
 		return obj;
 	}
 
+	/**
+	 * Nulls fields that do not have a value.
+	 * 
+	 * @return {object}
+	 */
 	static nullMissingFields (obj) {
 		for (var field in obj) {
 			if ( typeof obj[ field ] == "undefined" && tracked.indexOf(field) == -1 ) {
@@ -55,10 +70,22 @@ class FormatUtils {
 		return flatten(obj, { safe: true });
 	}
 
+	/**
+	 * Flattens a nested object to a single level.
+	 * 
+	 * @return {object}
+	 */
 	static unflatten (obj) {
 		return unflatten(obj);
 	}
 
+	/**
+	 * Runs all the format utilities in order on a given object.
+	 * 
+	 * @param  {object} obj
+	 * @param  {string} mode 'api' or 'hook'
+	 * @return {object}      resulting object
+	 */
 	static format (obj, mode) {
 		obj = FormatUtils.flatten(obj);
 		obj = FormatUtils.renameFields(obj, mode);

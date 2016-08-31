@@ -85,6 +85,14 @@ class FormatBase {
 			});
 	}
 
+	/**
+	 * Computes the status for a given user story.
+	 * The status is a field that does not exist in Rally or Salesforce,
+	 * but is computed as a combination of the Project that a user story belongs
+	 * to and the L3 Kanban Stage of the the user story.
+	 * 
+	 * @return {object}
+	 */
 	addStatus () {
 		assert(this.obj.Project);
 
@@ -117,6 +125,14 @@ class FormatBase {
 		return this;
 	}
 
+	/**
+	 * Extends the Elastic document with dummy data for fields that
+	 * have not yet been imported from Salesforce into ElasticSearch.
+	 *
+	 * NOTE: this will be removed in the future
+	 * 
+	 * @return {object}
+	 */
 	addDummyData () {
 		var randCustomers = [
 			'Adams Mark', 'Advena Hotels', 'Affinia Hotels', 'Avari Hotels', 'Champneys', 'Choice Hotels', 'Clarion Hotels', 'Club Med', 'Club Quarters', 'Coast Hotels', 'Conrad Hotels',

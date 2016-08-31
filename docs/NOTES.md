@@ -12,10 +12,7 @@ Everything I run into while pulling in the data, it might be helpful for anyone 
 * Running example queries on the documentation will use the selected workspace, so choose the TravelClick workspace before running queries through the documentation.
 
 ### Bugs encountered
-* Some User Stories in the Lookback API return no revisions. To reproduce run the following queries:
-    - `GET https://rally1.rallydev.com/analytics/v2.0/service/rally/workspace/6692415259/artifact/snapshot/query.js?find={"ObjectID":10457675103}`
-    - `GET https://rally1.rallydev.com/slm/webservice/v2.0/revisionhistory/10457675104`
-* A ticket has been filed with Rally and can be found [here](https://rallycommunity.rallydev.com/cases/detail?id=50014000010P5t4AAC).
+* As stated in the documentation there are entities that are currently not supported by the Lookback API and no information on Test Sets is returned by the Lookback API.
 * Some of the Revisions returned are missing the user story's UUID (all of the have an ID though).
 * It is not possible to set a webhook for a custom attribute, currently a webhook is set for the entire TravelClick workspace.
 * Revision dates from the Lookback API do not always return as ISO8601 format.

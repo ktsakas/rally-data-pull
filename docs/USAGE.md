@@ -28,4 +28,4 @@ The process would be as follows:
 ```
 * Add the field to schema.json.
 
-**Almost always** the key in the object returned by the api follows a standard format (look at mappings.json), so you will not need to follow the first two steps.
+**Almost always** the key in for a custom returned by the api follows a standard format (look at mappings.json), so you will not need to follow the first two steps.

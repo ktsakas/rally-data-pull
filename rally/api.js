@@ -124,11 +124,11 @@ class RallyAPI {
 	}
 
 	/**
-	 * Gets revisions(changes) for a given artifact.
+	 * Gets up to 100 revisions(changes) for a given artifact.
 	 * 
 	 * @param  {integer} artifactID
 	 * @param  {integer} workspaceID
-	 * @param  {integer} start	only used for recursion and is optional
+	 * @param  {integer} start	the revision to start from
 	 * @return {promise}
 	 */
 	static getArtifactRevisions (artifactID, workspaceID, start) {
@@ -160,6 +160,13 @@ class RallyAPI {
 		});
 	}
 
+	/**
+	 * Gets up to 200 artifacts.
+	 * 
+	 * @param  {integer} start	the artifact to start from
+	 * @param  {integer} pagesize
+	 * @return {promise}
+	 */
 	static getArtifacts (start, pagesize) {
 		var options = {
 			method: 'GET',

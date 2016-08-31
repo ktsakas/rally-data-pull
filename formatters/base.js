@@ -118,12 +118,17 @@ class FormatBase {
 	}
 
 	addDummyData () {
-		var randCustomers = ['Penn', 'Hilton', 'Serai', 'Gondola', 'Transick', 'Beddom'];
+		var randCustomers = [
+			'Adams Mark', 'Advena Hotels', 'Affinia Hotels', 'Avari Hotels', 'Champneys', 'Choice Hotels', 'Clarion Hotels', 'Club Med', 'Club Quarters', 'Coast Hotels', 'Conrad Hotels',
+			'Crowne Plaza', 'Doubletree', 'Heartland Inn', 'Holiday Inn', 'Hotel Indigo', 'Hyatt Place', 'Microtel', 'Morgans Hotel Group', 'La Copa Inns', 'Hotel Ibis'
+		];
+		var randCustomerGroups = ['Penn', 'Hilton', 'Serai', 'Gondola', 'Transick', 'Beddom'];
 		var randRegion = ['North America', 'South America', 'Europe', 'Asia', 'Australia'];
 
 		// Use th Story ID to get consistent data across revisions on the same story
-		this.obj.Customer = randCustomers[this.obj.Story.ID % 6];
-		this.obj.Region = randRegion[this.obj.Story.ID % 5];
+		this.obj.Customer = randCustomers[this.obj.Story.ID % randCustomers.length];
+		this.obj.CustomerGroup = randCustomerGroups[this.obj.Story.ID % randCustomerGroups.length];
+		this.obj.Region = randRegion[this.obj.Story.ID % randRegion.length];
 
 		return this;
 	}

@@ -53,6 +53,7 @@
 	},
 	"CreationDate": "date",
 	"Customer": "string",
+	"CustomerGroup": "string",
 	"DataType": {
 		"type": "string",
 		"null_value": "N/A"
